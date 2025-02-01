@@ -4,4 +4,5 @@ discharge_1980-2023/GL_USA_USGS_streamflow.csv
 Canadian_basins_discharge_cleaned/
 Canadian_climate_discharge_data/
 US_climate_discharge_data/
+data/time_series/*
 
