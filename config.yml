@@ -1,7 +1,7 @@
 # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - Canadian Basins - Attempt 2
+experiment_name: GAGEii - US Basins Test
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
@@ -9,7 +9,7 @@ run_dir:
 # files to specify training, validation and test basins (relative to code root or absolute path)
 train_basin_file: basin_list/train.txt
 validation_basin_file: basin_list/validation.txt
-test_basin_file: Canadian_basin_list_test.txt
+test_basin_file: basin_list/test.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1981'
@@ -50,10 +50,10 @@ head: regression
 # ----> General settings <----
 
 # Number of cell states of the LSTM
-hidden_size: 64
+hidden_size: 256
 
 # Initial bias value of the forget gate
-initial_forget_bias: 100
+initial_forget_bias: 3
 
 # Dropout applied to the output of the LSTM
 output_dropout: 0.2
@@ -125,6 +125,8 @@ dynamic_inputs:
 - srad
 - swe
 - tmax
+- tmin
+- vp
 
 # which columns to use as target
 target_variables:

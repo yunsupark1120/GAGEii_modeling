@@ -5,4 +5,5 @@ Canadian_basins_discharge_cleaned/
 Canadian_climate_discharge_data/
 US_climate_discharge_data/
 data/time_series/*
-
+data/csv_files/*
+runs/*
