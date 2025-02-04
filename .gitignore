@@ -7,3 +7,4 @@ US_climate_discharge_data/
 data/time_series/*
 data/csv_files/*
 runs/*
+shapefile/*
