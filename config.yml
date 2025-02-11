@@ -1,134 +1,120 @@
-# --- Experiment configurations --------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
+# EXPERIMENT CONFIGURATIONS
+# -----------------------------------------------------------------------------------------
+experiment_name: GAGEii - Missing Value Test  # A user-defined name for this experiment/run
 
-# experiment name, used as folder name
-experiment_name: GAGEii - Missing Value Test
+run_dir:  # (Optional) directory to store experiment output. If empty, defaults to ./runs/<experiment_name>/
 
-# place to store run directory (if empty runs are stored in $cwd$/runs/)
-run_dir:
+train_basin_file: basin_list/missing_involved.txt    # File listing basins for training
+validation_basin_file: basin_list/missing_involved.txt # File listing basins for validation
+test_basin_file: basin_list/missing_involved.txt     # File listing basins for testing
 
-# files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: basin_list/missing_involved.txt
-validation_basin_file: basin_list/missing_involved.txt
-test_basin_file: basin_list/missing_involved.txt
+train_start_date: '01/01/1981'  # Start date for training data
+train_end_date: '31/12/2000'    # End date for training data
+validation_start_date: '01/01/2001'   # Start date for validation data
+validation_end_date: '31/12/2010'     # End date for validation data
+test_start_date: '01/01/2011'         # Start date for test data
+test_end_date: '31/12/2022'           # End date for test data
 
-# training, validation and test time periods (format = 'dd/mm/yyyy')
-train_start_date: '01/01/1981'
-train_end_date: '31/12/2000'
-validation_start_date: '01/01/2001'
-validation_end_date: '31/12/2010'
-test_start_date: '01/01/2011'
-test_end_date: '31/12/2022'
+seed:  # (Optional) fixed random seed for reproducibility. Leave empty for a random seed
 
-# fixed seed, leave empty to use a random seed
-seed: 
+device: cuda:0  # Which device to use for training ('cuda:X', 'cpu', etc.)
 
-# which GPU (id) to use [in format of cuda:0, cuda:1 etc, or cpu or None]
-device: cuda:0
-
-# --- Validation configuration ---------------------------------------------------------------------
-
-# specify after how many epochs to perform validation
-validate_every: 1
-
-# specify how many random basins to use for validation
-validate_n_random_basins: 200
-
-# specify which metrics to calculate during validation (see codebase.evaluation.metrics)
+# -----------------------------------------------------------------------------------------
+# VALIDATION CONFIGURATION
+# -----------------------------------------------------------------------------------------
+validate_every: 1              # Perform validation after every N epochs
+validate_n_random_basins: 200  # Number of basins randomly chosen for validation each time
 metrics:
-- NSE
+  - NSE   # List of metrics to calculate (here, only Nash-Sutcliffe Efficiency)
 
-# --- Model configuration --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------
+# MODEL CONFIGURATION
+# -----------------------------------------------------------------------------------------
+model: cudalstm           # Base model type from the NeuralHydrology model zoo
+head: regression          # Prediction head (options include 'regression', 'mdn', 'umal', etc.)
+hidden_size: 256          # LSTM hidden state size
+initial_forget_bias: 3    # Initial bias for the forget gate in LSTM cells
+output_dropout: 0.2       # Dropout rate for the LSTM output
+output_activation: linear # Activation function after the final output layer
 
-# base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
-# (has to match the if statement in modelzoo/__init__.py)
-model: cudalstm
+# -----------------------------------------------------------------------------------------
+# TRAINING CONFIGURATION
+# -----------------------------------------------------------------------------------------
+optimizer: Adam       # Which optimizer to use (Adam, Adadelta, etc.)
+loss: RMSE            # Loss function (MSE, NSE, RMSE, etc.)
 
+learning_rate:        # Dictionary specifying learning rates at given epochs
+  0: 0.001            # 0 -> epoch 0: initial LR = 0.001
+  50: 0.0005          # 50 -> epoch 50: LR = 0.0005
 
-# prediction head [regression, mdn, umal]. Define the head specific parameters below
-head: regression
+batch_size: 256       # Number of samples per training mini-batch
+epochs: 50            # Total number of training epochs
+clip_gradient_norm: 1 # If non-zero, clips gradients to this norm for stability
+predict_last_n: 1     # Number of time steps used to compute the loss (1 = only last time step in sequence)
+seq_length: 365       # Length of the input sequence (in days here) fed to the model
+num_workers: 8        # Number of parallel workers for the data loading pipeline
+log_interval: 5       # Log the training loss every N steps
+log_tensorboard: True # Whether to log training metrics to TensorBoard
+save_weights_every: 1 # Save model weights to disk every N epochs
+save_validation_results: True # If True, store validation results to disk after each validation
 
-# ----> General settings <----
-
-# Number of cell states of the LSTM
-hidden_size: 256
-
-# Initial bias value of the forget gate
-initial_forget_bias: 3
-
-# Dropout applied to the output of the LSTM
-output_dropout: 0.2
-
-output_activation: linear
-
-# --- Training configuration -----------------------------------------------------------------------
-
-# specify optimizer [Adam, Adadelta]
-optimizer: Adam
-
-# specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
-loss: RMSE
-
-# specify learning rates to use starting at specific epochs (0 is the initial learning rate)
-learning_rate:
-    0: 0.001
-    50: 0.0005
-
-# Mini-batch size
-batch_size: 256
-
-# Number of training epochs
-epochs: 50
-
-# If True, clips norm of gradients
-clip_gradient_norm: 1
-
-# Defines which time steps are used to calculate the loss. Can't be larger than seq_length
-predict_last_n: 1
-
-# Length of the input sequence
-seq_length: 365
-
-# Number of parallel workers used in the data pipeline
-num_workers: 8
-
-# Log the training loss every n steps
-log_interval: 5
-
-# If true, writes logging results into tensorboard file
-log_tensorboard: True
-
-# Save model weights every n epochs
-save_weights_every: 1
-
-# Store the results of the validation to disk
-save_validation_results: True
-
-# --- Data configurations --------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------------------
+# DATA CONFIGURATIONS
+# -----------------------------------------------------------------------------------------
 data_dir: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/data
+  # Directory where your CSV or other data files are located
 dataset: generic
+  # Specifies the data source/format. 'generic' means your data is in a generic CSV format
+  # recognized by NeuralHydrology.
 
-
-# Forcing product [daymet, maurer, maurer_extended, nldas, nldas_extended]
-# can be either a list of forcings or a single forcing product
-# forcings:
-# - daymet
-
-# variables to use as time series input (names match the data file column headers)
-# Note: In case of multiple input forcing products, you have to append the forcing product behind
-# each variable. E.g. 'prcp(mm/day)' of the daymet product is 'prcp(mm/day)_daymet'
-
-
+# Which columns (time-series variables) to use as model inputs
 dynamic_inputs:
-- dayl
-- prcp
-- srad
-- swe
-- tmax
-- tmin
-- vp
+  - dayl   
+  - prcp   
+  - srad   
+  - swe    
+  - tmax   
+  - tmin   
+  - vp     
 
-# which columns to use as target
+# Which columns to use as the target for training
 target_variables:
-- discharge
+  - discharge  # Streamflow/discharge as the prediction target
 
+# -----------------------------------------------------------------------------------------
+# PREPROCESSING CONFIGURATIONS
+# -----------------------------------------------------------------------------------------
+preprocessing:
+  # Global options: these apply to all variables unless overridden for a specific variable.
+  fill_nans: None      # How to fill missing values: 'mean', 'median', 'zeros', None, etc
+
+  # Definitions for how each dynamic input variable is transformed
+  dynamic:
+    dayl:
+      scaler: "standard"     # 'standard' = subtract mean, divide by standard deviation
+      log_transform: False   # No log transform for this variable
+    prcp:
+      scaler: "minmax"       # 'minmax' = scale values into [0,1]
+      log_transform: False
+    srad:
+      scaler: "robust"       # 'robust' = uses median & interquartile range (less sensitive to outliers)
+      log_transform: False
+    swe:
+      scaler: "standard"
+      log_transform: True    # Apply log(x + 1) transform (commonly adds 1 to avoid log(0))
+    tmax:
+      scaler: "minmax"
+      log_transform: False
+    tmin:
+      scaler: "minmax"
+      log_transform: False
+    vp:
+      scaler: "standard"
+      log_transform: False
+
+  # Definitions for how each target variable is transformed
+  target:
+    discharge:
+      scaler: "standard"     # 'standard' scaling for discharge
+      log_transform: True     # Log-transform for skewed discharge distribution
