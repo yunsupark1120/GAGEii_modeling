@@ -1,0 +1,88 @@
+# -----------------------------------------------------------------------------------------
+# EXPERIMENT CONFIGURATIONS
+# -----------------------------------------------------------------------------------------
+experiment_name: GAGEii - Transformer Test
+
+run_dir:
+
+train_basin_file: basin_list/missing_involved.txt
+validation_basin_file: basin_list/missing_involved.txt
+test_basin_file: basin_list/missing_involved.txt
+
+train_start_date: '01/01/1981'
+train_end_date: '31/12/2000'
+validation_start_date: '01/01/2001'
+validation_end_date: '31/12/2010'
+test_start_date: '01/01/2011'
+test_end_date: '31/12/2022'
+
+seed:
+
+device: cuda:0
+
+# -----------------------------------------------------------------------------------------
+# VALIDATION CONFIGURATION
+# -----------------------------------------------------------------------------------------
+validate_every: 1
+validate_n_random_basins: 200
+metrics:
+  - NSE
+
+# -----------------------------------------------------------------------------------------
+# MODEL CONFIGURATION
+# -----------------------------------------------------------------------------------------
+model: transformer         # Switch from LSTM to Transformer
+head: regression
+
+# ----> General settings <----
+hidden_size: 256           # Size of the embeddings in the transformer
+initial_forget_bias: 3     # Not used by the transformer, but recognized by the config
+output_dropout: 0.2        # Dropout after the final output layer
+output_activation: linear
+
+# ----> Transformer-specific settings <----
+transformer_nlayers: 4                 # Number of multi-head self-attention layers
+transformer_nheads: 7                   # Number of parallel attention heads
+transformer_dim_feedforward: 512       # Dimension of feed-forward layers inside each transformer block
+transformer_dropout: 0.1               # Dropout used within the transformer encoder (attention + feed-forward)
+transformer_positional_dropout: 0.1    # Dropout applied specifically to positional encodings
+transformer_positional_encoding_type: sum  # 'sum' adds positional encoding to the embeddings; 'concatenate' can increase dimensionality
+
+# -----------------------------------------------------------------------------------------
+# TRAINING CONFIGURATION
+# -----------------------------------------------------------------------------------------
+optimizer: Adam
+loss: MSE
+
+learning_rate:
+  0: 0.001
+  50: 0.0005
+
+batch_size: 256
+epochs: 50
+clip_gradient_norm: 1
+predict_last_n: 1
+seq_length: 365
+num_workers: 8
+log_interval: 5
+log_tensorboard: True
+save_weights_every: 1
+save_validation_results: True
+
+# -----------------------------------------------------------------------------------------
+# DATA CONFIGURATIONS
+# -----------------------------------------------------------------------------------------
+data_dir: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/data
+dataset: generic
+
+dynamic_inputs:
+  - dayl
+  - prcp
+  - srad
+  - swe
+  - tmax
+  - tmin
+  - vp
+
+target_variables:
+  - discharge
