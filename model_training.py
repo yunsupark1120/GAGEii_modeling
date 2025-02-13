@@ -1,8 +1,6 @@
-import pickle
 from pathlib import Path
 import argparse
 
-import matplotlib.pyplot as plt
 import torch
 from neuralhydrology.nh_run import start_run
 
