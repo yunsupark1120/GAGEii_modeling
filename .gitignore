@@ -6,6 +6,7 @@ Canadian_climate_discharge_data/
 US_climate_discharge_data/
 data/time_series/*
 data/csv_files/*
+data/processed_csv_files/*
 runs/*
 shapefile/*
 climate_discharge_data
