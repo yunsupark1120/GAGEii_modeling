@@ -10,3 +10,4 @@ data/processed_csv_files/*
 runs/*
 shapefile/*
 climate_discharge_data
+__pycache__/*
