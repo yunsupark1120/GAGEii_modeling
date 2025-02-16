@@ -1,15 +1,15 @@
 # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - Z_score_test
+experiment_name: GAGEii - ALL_US_with_static_z_standardized
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: basin_list/train.txt
-validation_basin_file: basin_list/train.txt
-test_basin_file: basin_list/train.txt
+train_basin_file: basin_list/US_basin_list.txt
+validation_basin_file: basin_list/US_basin_list.txt
+test_basin_file: basin_list/US_basin_list.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1981'
@@ -74,10 +74,10 @@ learning_rate:
     50: 0.0005
 
 # Mini-batch size
-batch_size: 64
+batch_size: 256
 
 # Number of training epochs
-epochs: 50
+epochs: 100
 
 # If True, clips norm of gradients
 clip_gradient_norm: 1
@@ -127,6 +127,43 @@ dynamic_inputs:
 - tmax
 - tmin
 - vp
+
+static_attributes:
+- ele_mt_sav
+- ele_mt_smn
+- ele_mt_smx
+- slp_dg_sav
+- area
+- area_fraction_used_for_aggregation
+- cly_pc_sav
+- slt_pc_sav
+- snd_pc_sav
+- soc_th_sav
+- gwt_cm_sav
+- for_pc_sse
+- wet_pc_sg1
+- wet_pc_sg2
+- crp_pc_sse
+- urb_pc_sse
+- pnv_pc_s04
+- pnv_pc_s05
+- pre_mm_syr
+- tmp_dc_syr
+- tmp_dc_smn
+- tmp_dc_smx
+- pet_mm_syr
+- ari_ix_sav
+- snw_pc_syr
+- snw_pc_smx
+- swc_pc_syr
+- wet_pc_s01
+- wet_pc_s03
+- pop_ct_usu
+- ppd_pk_sav
+- gdp_ud_sav
+- hdi_ix_sav
+
+
 
 # which columns to use as target
 target_variables:

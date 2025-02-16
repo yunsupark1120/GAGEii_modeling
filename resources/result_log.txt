@@ -1,0 +1,37 @@
+* Z - Standardized, trained with static attributes *
+count    130.000000
+mean      -1.476214
+std        2.325603
+min      -21.084925
+25%       -1.647108
+50%       -0.814960
+75%       -0.444757
+max       -0.110263
+Name: NSE, dtype: float64
+
+* No preprocessing, trained with static attributes *
+count    130.000000
+mean       0.770685
+std        0.141296
+min       -0.252001
+25%        0.754666
+50%        0.810115
+75%        0.844347
+max        0.907296
+Name: NSE, dtype: float64
+
+* No preprocessing, trained with static attributes on all US Stations *
+count    398.000000
+mean           -inf
+std             NaN
+min            -inf
+25%       -8.637053
+50%        0.447354
+75%        0.737577
+max        0.892988
+Name: NSE, dtype: float64
+
+- Note: -inf or exteme negative NSE are due to the lack of data in the given station
+- Idea: Some simulates negative discharge values, which are not possible in reality - convert these values to 0
+
+* Z - Standardized, trained with static attributes on all US Stations *
