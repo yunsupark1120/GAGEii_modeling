@@ -58,3 +58,21 @@ Good              124
 Excellent          97
 Unsatisfactory     22
 Name: count, dtype: int64
+
+* Z - Standardized, trained with static attributes on all US Stations *
+count    3.460000e+02
+mean    -1.982065e+32
+std      2.635463e+33
+min     -4.796612e+34
+25%     -2.254896e-01
+50%      6.216832e-01
+75%      7.621465e-01
+max      8.983960e-01
+Name: NSE, dtype: float64
+
+Performance
+Negative          158
+Good              119
+Excellent          95
+Unsatisfactory     27
+Name: count, dtype: int64
