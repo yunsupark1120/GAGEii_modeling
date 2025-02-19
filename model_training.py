@@ -19,4 +19,5 @@ def main():
     start_run(config_file=config_file_path)
 
 if __name__ == "__main__":
-    main()
+    # main()
+    start_run(config_file=Path('config.yml'))
