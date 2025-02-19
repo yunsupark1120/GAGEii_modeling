@@ -31,7 +31,30 @@ min            -inf
 max        0.892988
 Name: NSE, dtype: float64
 
+Performance
+Negative          161
+Good              122
+Excellent          85
+Unsatisfactory     30
+Name: count, dtype: int64
+
 - Note: -inf or exteme negative NSE are due to the lack of data in the given station
 - Idea: Some simulates negative discharge values, which are not possible in reality - convert these values to 0
 
-* Z - Standardized, trained with static attributes on all US Stations *
+* MinMax - Standardized, trained with static attributes on all US Stations *
+count    3.460000e+02
+mean    -1.322976e+32
+std      1.507634e+33
+min     -2.602595e+34
+25%     -2.448147e-01
+50%      6.436580e-01
+75%      7.582399e-01
+max      8.730016e-01
+Name: NSE, dtype: float64
+
+Performance
+Negative          156
+Good              124
+Excellent          97
+Unsatisfactory     22
+Name: count, dtype: int64
