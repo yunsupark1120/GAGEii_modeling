@@ -9,3 +9,4 @@ runs/*
 shapefile/*
 climate_discharge_data
 __pycache__/*
+metadata
