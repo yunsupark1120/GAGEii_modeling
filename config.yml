@@ -1,7 +1,7 @@
 # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - All Stations_filtered
+experiment_name: GAGEii - All Static_variable_scaled
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
@@ -31,7 +31,7 @@ device: cuda:0
 validate_every: 1
 
 # specify how many random basins to use for validation
-validate_n_random_basins: 200
+validate_n_random_basins: 300
 
 # specify which metrics to calculate during validation (see codebase.evaluation.metrics)
 metrics:
@@ -50,13 +50,13 @@ head: regression
 # ----> General settings <----
 
 # Number of cell states of the LSTM
-hidden_size: 256
+hidden_size: 128
 
 # Initial bias value of the forget gate
 initial_forget_bias: 3
 
 # Dropout applied to the output of the LSTM
-output_dropout: 0.2
+output_dropout: 0.3
 
 output_activation: linear
 
@@ -72,9 +72,10 @@ loss: MSE
 learning_rate:
     0: 0.001
     50: 0.0005
+    75: 0.0002
 
 # Mini-batch size
-batch_size: 256
+batch_size: 128
 
 # Number of training epochs
 epochs: 100

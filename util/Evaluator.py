@@ -88,7 +88,7 @@ class Evaluator():
     def __init__(self, run_dir: str, 
                  epoch_num: int, 
                  csv_dir: str = "data/csv_files",
-                 eval_list: str = r"basin_list\US_basin_list.txt",
+                 eval_list: str = r"basin_list\test.txt",
                  mean: float = 0.8561527661255196,
                  var: float = 5.06157279557463,
                  test_start_date: str = '01/01/2011',
@@ -133,7 +133,6 @@ class Evaluator():
     
     def __evaluate_single__(self, basin_id: str):
         
-
         # set the epoch number
         epoch_num = str(self.epoch_num)
         if len(epoch_num) == 1:
@@ -142,53 +141,53 @@ class Evaluator():
             epoch_num = "model_epoch0" + epoch_num
         else:
             epoch_num = "model_epoch" + epoch_num
-            
+
         with open(self.run_dir / "test" / epoch_num / "test_results.p", "rb") as fp:
             results = pickle.load(fp)
-        
-         # simulated values
+
+        # simulated values
         qsim = results[basin_id]['1D']['xr']['discharge_sim']
         sim = qsim.values
         dates = qsim['date'].values
-        
+
         if self.apply_transformation:
             sim = (sim * np.sqrt(self.var)) + self.mean
-            
-            sim = np.exp(sim) - 1e-6
-            
+        sim = np.exp(sim) - 1e-6
+
         csv_file_path = Path(self.csv_dir) / f"{basin_id}.csv"
-        df = pd.read_csv(csv_file_path, index_col='date', parse_dates=True).loc[self.test_start_date:self.test_end_date, [self.target_var]]
-        
+        df = pd.read_csv(csv_file_path, index_col='date', parse_dates=True)
+        df = df.loc[self.test_start_date:self.test_end_date, [self.target_var]]
+
         obs = df[self.target_var].values
-        
+        if obs.size == 0:
+            obs = np.full_like(sim, np.nan)
+        elif obs.size < sim.size:
+            obs = np.concatenate([obs, np.full(sim.size - obs.size, np.nan)])
+
         obs_sim_df = pd.DataFrame({
             'date': dates,
             'observed': obs.flatten(),
             'simulated': sim.flatten()
         })
-        
         # drop rows with missing values
         obs_sim_df = obs_sim_df.dropna()
-        
-        # calculate nse
+
         observed_values = obs_sim_df['observed'].values
         simulated_values = obs_sim_df['simulated'].values
         dates = obs_sim_df['date']
-        
-        mean_observed = np.mean(observed_values)
-        sum_squared_diff = sum((obs - sim) ** 2 for obs, sim in zip(observed_values, simulated_values))
-        mean_observed = np.mean(observed_values)
-        sum_squared_diff_mean = sum((obs - mean_observed) ** 2 for obs in observed_values)
-        nse = None
-        
-        if sum_squared_diff_mean == 0:
-        # Observed data is constant => no variability => NSE is undefined
-            nse = np.nan  # or some sentinel value
+
+        # Check if there are any observed values left to compute metrics
+        if observed_values.size == 0:
+            nse = np.nan
         else:
-            nse = 1 - (sum_squared_diff / sum_squared_diff_mean)
-            nse = nse.item()
-            
+            mean_observed = np.mean(observed_values)
+            sum_squared_diff = np.sum((observed_values - simulated_values) ** 2)
+            sum_squared_diff_mean = np.sum((observed_values - mean_observed) ** 2)
+            nse = 1 - (sum_squared_diff / sum_squared_diff_mean) if sum_squared_diff_mean != 0 else np.nan
+            nse = nse.item() if hasattr(nse, 'item') else nse
+
         return nse, simulated_values, observed_values, dates
+
         
     def __evaluate__(self, eval_list: str):
         
@@ -209,7 +208,6 @@ class Evaluator():
     
     def __collect_validation__(self):
         validation_folder = self.run_dir / "validation"
-        
         epoches = []
         mean_nse_values = []
         median_nse_values = []
@@ -220,27 +218,32 @@ class Evaluator():
             epoches.append(epoch)
             epoch_folder = os.path.join(validation_folder, f"model_epoch{epoch:03d}")
             csv_file = os.path.join(epoch_folder, "validation_metrics.csv")
-
             if os.path.exists(csv_file):
                 df = pd.read_csv(csv_file)
-                mean_nse = df["NSE"].dropna().mean()
-                median_nse = df["NSE"].dropna().median()
-                max_nse = df["NSE"].dropna().max()
+                nse_series = df["NSE"].dropna()
+                if nse_series.empty:
+                    mean_nse = np.nan
+                    median_nse = np.nan
+                    max_nse = np.nan
+                else:
+                    mean_nse = nse_series.mean()
+                    median_nse = nse_series.median()
+                    max_nse = nse_series.max()
                 mean_nse_values.append(mean_nse)
                 median_nse_values.append(median_nse)
                 max_nse_values.append(max_nse)
             else:
-                mean_nse_values.append(None)
-                median_nse_values.append(None)
-                max_nse_values.append(None)
-                
+                mean_nse_values.append(np.nan)
+                median_nse_values.append(np.nan)
+                max_nse_values.append(np.nan)
+
         validation_df = pd.DataFrame({
-            "epoch" : epoches,
+            "epoch": epoches,
             "mean_nse": mean_nse_values,
             "median_nse": median_nse_values,
             "max_nse": max_nse_values
         })
-        
+
         return validation_df
     
     def __str__(self):
@@ -277,6 +280,9 @@ class Evaluator():
     
     def get_nse(self):
         return self.__result_df
+    
+    def get_validation(self):
+        return self.__validation_df
     
     def plot_prediction(self, basin_id: str):
         
