@@ -17,7 +17,7 @@ train_end_date: '31/12/2000'
 validation_start_date: '01/01/2001'
 validation_end_date: '31/12/2010'
 test_start_date: '01/01/2011'
-test_end_date: '31/12/2022'
+test_end_date: '31/12/2023'
 
 # fixed seed, leave empty to use a random seed
 seed: 
