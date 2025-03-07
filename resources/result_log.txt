@@ -76,3 +76,47 @@ Good              119
 Excellent          95
 Unsatisfactory     27
 Name: count, dtype: int64
+
+** Trained on the entire dataset **
+
+- Z-standardized both dynamic and static attributes
+- Trained on non-filtered data (odd values remain)
+
+1. Tested on non-filtered data
+Summary Statistic: 
+count    7.650000e+02
+mean    -7.022238e+31
+std      9.653304e+32
+min     -2.368063e+34
+25%     -3.848980e-01
+50%      3.322953e-01
+75%      5.169993e-01
+max      7.731160e-01
+Name: NSE, dtype: float64
+
+Performance Summary: 
+Performance
+Negative          444
+Good              345
+Unsatisfactory    186
+Excellent           1
+
+2. Tested on filtered data
+Summary Statistic: 
+count    658.000000
+mean      -1.515022
+std       21.888261
+min     -516.738543
+25%        0.221114
+50%        0.400662
+75%        0.540706
+max        0.773116
+Name: NSE, dtype: float64
+
+Performance Summary: 
+Performance
+Negative          407
+Good              365
+Unsatisfactory    203
+Excellent           1
+Name: count, dtype: int64

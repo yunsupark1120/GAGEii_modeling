@@ -1,22 +1,22 @@
-# --- Experiment configurations --------------------------------------------------------------------
+ # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - All_Gauges_Filtered_Static_variable_scaled
+experiment_name: GAGEii - ALL_Gauges_Filtered_Regionally_Separate
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
-validation_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
-test_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
+train_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/train.txt
+validation_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/validate.txt
+test_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/test.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1980'
-train_end_date: '31/12/2000'
-validation_start_date: '01/01/2001'
-validation_end_date: '31/12/2010'
-test_start_date: '01/01/2011'
+train_end_date: '31/12/2023'
+validation_start_date: '01/01/1980'
+validation_end_date: '31/12/2023'
+test_start_date: '01/01/1980'
 test_end_date: '31/12/2023'
 
 # fixed seed, leave empty to use a random seed
@@ -28,10 +28,10 @@ device: cuda:0
 # --- Validation configuration ---------------------------------------------------------------------
 
 # specify after how many epochs to perform validation
-validate_every: 1
+validate_every: 5
 
 # specify how many random basins to use for validation
-validate_n_random_basins: 300
+validate_n_random_basins: 200
 
 # specify which metrics to calculate during validation (see codebase.evaluation.metrics)
 metrics:
@@ -50,7 +50,7 @@ head: regression
 # ----> General settings <----
 
 # Number of cell states of the LSTM
-hidden_size: 128
+hidden_size: 256
 
 # Initial bias value of the forget gate
 initial_forget_bias: 3
@@ -71,8 +71,9 @@ loss: MSE
 # specify learning rates to use starting at specific epochs (0 is the initial learning rate)
 learning_rate:
     0: 0.001
-    50: 0.0005
-    75: 0.0002
+    25: 0.0005
+    50: 0.0003
+    75: 0.0001
 
 # Mini-batch size
 batch_size: 128
@@ -128,16 +129,6 @@ dynamic_inputs:
   - tmax
   - tmin
   - vp
-  - day_of_week_sin
-  - day_of_week_cos
-  - day_of_month_sin
-  - day_of_month_cos
-  - day_of_year_sin
-  - day_of_year_cos
-  - week_of_year_sin
-  - week_of_year_cos
-  - month_of_year_sin
-  - month_of_year_cos
 
 
 static_attributes:
@@ -178,7 +169,7 @@ static_attributes:
 - glc_pc_s14
 - glc_pc_s11
 - glc_pc_s12
-- glc_pc_s10
+# - glc_pc_s10
 - kar_pc_sse
 - slp_dg_sav
 - tmp_dc_s07
@@ -225,7 +216,6 @@ static_attributes:
 - wet_pc_s03
 - wet_pc_s01
 - hdi_ix_sav
-- fec_cl_smj
 - glc_cl_smj
 - swc_pc_syr
 - hft_ix_s09
