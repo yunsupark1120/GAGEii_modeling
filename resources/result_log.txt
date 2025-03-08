@@ -120,3 +120,28 @@ Good              365
 Unsatisfactory    203
 Excellent           1
 Name: count, dtype: int64
+
+** Trained with Regionally Separated Data **
+
+Summary Statistic: 
+count    172.000000
+mean      -4.589934
+std       44.511451
+min     -576.640514
+25%       -0.082836
+50%        0.287107
+75%        0.569783
+max        0.814711
+Name: NSE, dtype: float64
+
+Performance Summary: 
+Performance
+Negative          71
+Good              70
+Unsatisfactory    46
+Excellent          8
+Name: count, dtype: int64
+
+evaluate GAGEii-ALL_Gauges_Filtered_Regionally_Separate_0603_172605 epoch 5
+
+** Trained with Periodically Separated Data using 1980~2011 data **

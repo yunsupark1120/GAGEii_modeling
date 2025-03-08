@@ -1,7 +1,7 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - ALL_Gauges_Filtered_Regionally_Separate
+experiment_name: GAGEii - ALL_Gauges_Filtered_Regionally_Separate_Recent
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
@@ -12,11 +12,11 @@ validation_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_
 test_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/test.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
-train_start_date: '01/01/1980'
+train_start_date: '01/01/2013'
 train_end_date: '31/12/2023'
-validation_start_date: '01/01/1980'
+validation_start_date: '01/01/2013'
 validation_end_date: '31/12/2023'
-test_start_date: '01/01/1980'
+test_start_date: '01/01/2013'
 test_end_date: '31/12/2023'
 
 # fixed seed, leave empty to use a random seed
@@ -28,7 +28,7 @@ device: cuda:0
 # --- Validation configuration ---------------------------------------------------------------------
 
 # specify after how many epochs to perform validation
-validate_every: 5
+validate_every: 1
 
 # specify how many random basins to use for validation
 validate_n_random_basins: 200
