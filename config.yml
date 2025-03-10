@@ -1,21 +1,21 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - ALL_Gauges_Filtered_Regionally_Separate_Recent
+experiment_name: GAGEii - ALL_Gauges_Filtered_Periodically_GMM_eslstm
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/train.txt
-validation_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/validate.txt
-test_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/test.txt
+train_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
+validation_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
+test_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
-train_start_date: '01/01/2013'
-train_end_date: '31/12/2023'
-validation_start_date: '01/01/2013'
-validation_end_date: '31/12/2023'
+train_start_date: '01/01/1980'
+train_end_date: '31/12/2005'
+validation_start_date: '01/01/2006'
+validation_end_date: '31/12/2012'
 test_start_date: '01/01/2013'
 test_end_date: '31/12/2023'
 
@@ -41,11 +41,14 @@ metrics:
 
 # base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
 # (has to match the if statement in modelzoo/__init__.py)
-model: cudalstm
-
+model: ealstm
 
 # prediction head [regression, mdn, umal]. Define the head specific parameters below
-head: regression
+head: gmm
+n_distributions: 3
+n_samples: 10            
+negative_sample_handling: clip
+
 
 # ----> General settings <----
 
@@ -66,7 +69,7 @@ output_activation: linear
 optimizer: Adam
 
 # specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
-loss: MSE
+loss: GMMLoss
 
 # specify learning rates to use starting at specific epochs (0 is the initial learning rate)
 learning_rate:

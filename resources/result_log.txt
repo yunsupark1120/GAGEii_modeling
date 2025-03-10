@@ -144,4 +144,47 @@ Name: count, dtype: int64
 
 evaluate GAGEii-ALL_Gauges_Filtered_Regionally_Separate_0603_172605 epoch 5
 
+Summary Statistic: 
+count    137.000000
+mean      -3.255061
+std       13.080074
+min      -92.780883
+25%       -0.759337
+50%        0.266924
+75%        0.606344
+max        0.845769
+Name: NSE, dtype: float64
+
+Performance Summary: 
+Performance
+Negative          105
+Good               41
+Unsatisfactory     36
+Excellent          13
+Name: count, dtype: int64
+
+evaluate GAGEii-ALL_Gauges_Filtered_Regionally_Separate_Recent_0803_171549 epoch 100
+
 ** Trained with Periodically Separated Data using 1980~2011 data **
+
+Summary Statistic: 
+count    660.000000
+mean      -0.530332
+std       18.763434
+min     -473.707364
+25%        0.285503
+50%        0.458565
+75%        0.586935
+max        0.789943
+Name: NSE, dtype: float64
+
+Performance Summary: 
+Performance
+Good              424
+Negative          372
+Unsatisfactory    170
+Excellent           9
+Name: count, dtype: int64
+
+evaluate GAGEii-ALL_Gauges_Filtered_Periodically_Separate_0703_121713 epoch 92
+

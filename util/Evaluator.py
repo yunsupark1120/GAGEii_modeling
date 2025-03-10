@@ -152,7 +152,7 @@ class Evaluator():
 
         if self.apply_transformation:
             sim = (sim * np.sqrt(self.var)) + self.mean
-        sim = np.exp(sim) - 1e-6
+            sim = np.exp(sim) - 1e-6
 
         csv_file_path = Path(self.csv_dir) / f"{basin_id}.csv"
         df = pd.read_csv(csv_file_path, index_col='date', parse_dates=True)
