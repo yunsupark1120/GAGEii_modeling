@@ -11,3 +11,4 @@ climate_discharge_data
 __pycache__/*
 metadata/*
 !metadata/*.ipynb
+poster_work
