@@ -1,7 +1,7 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - ALL_Gauges_Filtered_Periodically_GMM_eslstm
+experiment_name: GAGEii - ALL_Gauges_Filtered_Periodically_eslstm
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
@@ -44,10 +44,10 @@ metrics:
 model: ealstm
 
 # prediction head [regression, mdn, umal]. Define the head specific parameters below
-head: gmm
-n_distributions: 3
-n_samples: 10            
-negative_sample_handling: clip
+head: regression
+# n_distributions: 3
+# n_samples: 10            
+# negative_sample_handling: clip
 
 
 # ----> General settings <----
@@ -69,7 +69,7 @@ output_activation: linear
 optimizer: Adam
 
 # specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
-loss: GMMLoss
+loss: MSE
 
 # specify learning rates to use starting at specific epochs (0 is the initial learning rate)
 learning_rate:

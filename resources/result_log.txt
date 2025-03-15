@@ -188,3 +188,23 @@ Name: count, dtype: int64
 
 evaluate GAGEii-ALL_Gauges_Filtered_Periodically_Separate_0703_121713 epoch 92
 
+Summary Statistic: 
+count    6.470000e+02
+mean    -3.299132e+60
+std      8.391736e+61
+min     -2.134538e+63
+25%      1.839860e-01
+50%      5.036016e-01
+75%      6.457838e-01
+max      8.590568e-01
+Name: NSE, dtype: float64
+
+Performance Summary: 
+Performance
+Negative          455
+Good              378
+Unsatisfactory    102
+Excellent          40
+Name: count, dtype: int64
+
+evaluate GAGEii-ALL_Gauges_Filtered_Periodically_eslstm_1303_085231 epoch 17
