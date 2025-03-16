@@ -237,6 +237,8 @@ class Evaluator():
                     'Negative'
         )
         
+        result_df.loc[result_df['NSE'].isnull() | (result_df['NSE'].astype(str).str.strip() == ""), 'Performance'] = "N/A"
+        
         return result_df
     
     def __collect_validation__(self):
@@ -334,6 +336,7 @@ class Evaluator():
         
     def print_summary(self):
         print(f"Summary Statistic: \n{self.__result_df['NSE'].replace(-np.inf, np.nan).dropna().describe()}\n")
+        print(f"Summary Statistic: \n{self.__result_df['KGE'].replace(-np.inf, np.nan).dropna().describe()}\n")
         print(f"Performance Summary: \n{self.__result_df['Performance'].value_counts()}\n")
         
         
