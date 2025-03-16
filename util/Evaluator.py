@@ -6,6 +6,7 @@ import pickle
 from pathlib import Path
 import os
 from tqdm import tqdm
+from scipy import stats
 
 
 class Evaluator():
@@ -179,32 +180,66 @@ class Evaluator():
         # Check if there are any observed values left to compute metrics
         if observed_values.size == 0:
             nse = np.nan
+            kge = np.nan
         else:
+            # NSE calculation (keep your existing code)
             mean_observed = np.mean(observed_values)
             sum_squared_diff = np.sum((observed_values - simulated_values) ** 2)
             sum_squared_diff_mean = np.sum((observed_values - mean_observed) ** 2)
             nse = 1 - (sum_squared_diff / sum_squared_diff_mean) if sum_squared_diff_mean != 0 else np.nan
             nse = nse.item() if hasattr(nse, 'item') else nse
+        
+            # Add KGE calculation
+            try:
+                # Calculate correlation coefficient
+                r = np.corrcoef(observed_values, simulated_values)[0, 1]
+                
+                # Calculate alpha (ratio of standard deviations)
+                alpha = np.std(simulated_values) / np.std(observed_values)
+                
+                # Calculate beta (ratio of means)
+                beta = np.mean(simulated_values) / np.mean(observed_values)
+                
+                # Calculate KGE
+                kge = 1 - np.sqrt((r - 1)**2 + (alpha - 1)**2 + (beta - 1)**2)
+                kge = kge.item() if hasattr(kge, 'item') else kge
+            except:
+                kge = np.nan
 
-        return nse, simulated_values, observed_values, dates
+        return nse, kge, simulated_values, observed_values, dates
 
         
     def __evaluate__(self, eval_list: str):
-        
         with open(eval_list, 'r') as file:
             basin_ids = file.read().splitlines()
             
         nse_values = []
+        kge_values = []  # New list for KGE values
         
-        print("Collecting NSE values")
+        print("Collecting NSE and KGE values")
         for basin_id in tqdm(basin_ids):
-            nse, _, _, _ = self.__evaluate_single__(basin_id)
+            nse, kge, _, _, _ = self.__evaluate_single__(basin_id)
             nse_values.append(nse)
+            kge_values.append(kge)  # Store KGE values
         
-        nse_df = pd.DataFrame({'basin_id': basin_ids, 'NSE': nse_values})
-        nse_df['Performance'] = nse_df['NSE'].apply(lambda x: 'Excellent' if x > 0.75 else 'Good' if x >= 0.36 else 'Unsatisfactory' if x >= 0 else 'Negative')
+        # Create DataFrame with both NSE and KGE
+        result_df = pd.DataFrame({
+            'basin_id': basin_ids, 
+            'NSE': nse_values,
+            'KGE': kge_values
+        })
         
-        return nse_df
+        # Categorize performance based on NSE (keep existing logic)
+        result_df['Performance'] = result_df['NSE'].apply(
+            lambda x: 'Excellent' if x > 0.75 else 
+                    'Good' if x >= 0.36 else 
+                    'Unsatisfactory' if x >= 0 else 
+                    'Negative'
+        )
+        
+        result_df.loc[result_df['NSE'].isnull() | (result_df['NSE'].astype(str).str.strip() == ""), 'Performance'] = "N/A"
+        
+        return result_df
     
     def __collect_validation__(self):
         validation_folder = self.run_dir / "validation"
@@ -273,20 +308,20 @@ class Evaluator():
         plt.show()
         
     def get_prediction(self, basin_id: str):
-        
-        nse, pred, _, _ = self.__evaluate_single__(basin_id)
-        
-        return nse, pred
+        nse, kge, pred, _, _ = self.__evaluate_single__(basin_id)
+        return nse, kge, pred
     
-    def get_nse(self):
+    def get_metrics(self):
         return self.__result_df
+    
+    
     
     def get_validation(self):
         return self.__validation_df
     
     def plot_prediction(self, basin_id: str):
         
-        nse, sim, obs, date = self.__evaluate_single__(basin_id)
+        nse, kge, sim, obs, date = self.__evaluate_single__(basin_id)
         
         
         plt.figure(figsize=(14, 7))
@@ -294,13 +329,14 @@ class Evaluator():
         plt.plot(date, sim, label='Simulated')
         plt.xlabel('Date')
         plt.ylabel('Discharge')
-        plt.title(f'Basin {basin_id} Observed vs Simulated - NSE: {nse}')
+        plt.title(f'Basin {basin_id} Observed vs Simulated\nNSE: {nse:.3f}, KGE: {kge:.3f}')
         plt.legend()
         plt.grid(True)
         plt.show()
         
     def print_summary(self):
         print(f"Summary Statistic: \n{self.__result_df['NSE'].replace(-np.inf, np.nan).dropna().describe()}\n")
+        print(f"Summary Statistic: \n{self.__result_df['KGE'].replace(-np.inf, np.nan).dropna().describe()}\n")
         print(f"Performance Summary: \n{self.__result_df['Performance'].value_counts()}\n")
         
         
@@ -323,6 +359,29 @@ class Evaluator():
         plt.hist(nse_values, bins=10, edgecolor='black', alpha=0.7)
         plt.title("Histogram of NSE Values Across Subbasins")
         plt.xlabel("NSE")
+        plt.ylabel("Frequency")
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.show()
+        
+    def plot_kge_distribution(self, ignore_neg=True):
+        kge_values = self.__result_df['KGE'].replace(-np.inf, np.nan).dropna()
+        
+        if ignore_neg:
+            kge_values = kge_values[kge_values >= 0]
+        
+        # Plot: Box plot
+        plt.figure(figsize=(10, 6))
+        plt.boxplot(kge_values, vert=True, patch_artist=True, labels=['KGE'])
+        plt.title("Distribution of KGE Values Across Subbasins")
+        plt.ylabel("KGE")
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.show()
+
+        # Plot: Histogram
+        plt.figure(figsize=(10, 6))
+        plt.hist(kge_values, bins=10, edgecolor='black', alpha=0.7)
+        plt.title("Histogram of KGE Values Across Subbasins")
+        plt.xlabel("KGE")
         plt.ylabel("Frequency")
         plt.grid(axis='y', linestyle='--', alpha=0.7)
         plt.show()
