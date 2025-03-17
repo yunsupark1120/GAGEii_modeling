@@ -154,6 +154,9 @@ class Evaluator():
         if self.apply_transformation:
             sim = (sim * np.sqrt(self.var)) + self.mean
             sim = np.exp(sim) - 1e-6
+            
+        # Convert all values in sim that are greater than 15 to 0
+        sim[sim > 1000] = np.median(sim)
 
         csv_file_path = Path(self.csv_dir) / f"{basin_id}.csv"
         df = pd.read_csv(csv_file_path, index_col='date', parse_dates=True)
