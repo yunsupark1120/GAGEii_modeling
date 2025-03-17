@@ -1,7 +1,7 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - ALL_Gauges_Filtered_Periodically_eslstm_outliers_filtered
+experiment_name: GAGEii - ALL_Gauges_Filtered_Periodically_plane_lstm_outliers_filtered
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
@@ -41,7 +41,7 @@ metrics:
 
 # base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
 # (has to match the if statement in modelzoo/__init__.py)
-model: ealstm
+model: cudalstm
 
 # prediction head [regression, mdn, umal]. Define the head specific parameters below
 head: regression
