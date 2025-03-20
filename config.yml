@@ -1,21 +1,21 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: GAGEii - ALL_Gauges_Filtered_Periodically_eslstm_outliers_filtered
+experiment_name: GAGEii - ALL_Gauges_Filtered_Periodically_plane_lstm_outliers_filtered
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/train.txt
-validation_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
-test_basin_file: C:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/basin_list/complete_basin_list.txt
+train_basin_file: /basin_list/train.txt
+validation_basin_file: /basin_list/complete_basin_list.txt
+test_basin_file: /basin_list/complete_basin_list.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1980'
-train_end_date: '31/12/2005'
-validation_start_date: '01/01/2006'
-validation_end_date: '31/12/2012'
+train_end_date: '31/12/2012'
+validation_start_date: '01/01/2013'
+validation_end_date: '31/12/2023'
 test_start_date: '01/01/2013'
 test_end_date: '31/12/2023'
 
@@ -82,7 +82,7 @@ learning_rate:
 batch_size: 128
 
 # Number of training epochs
-epochs: 100
+epochs: 30
 
 # If True, clips norm of gradients
 clip_gradient_norm: 1
@@ -110,7 +110,7 @@ save_validation_results: True
 
 # --- Data configurations --------------------------------------------------------------------------
 
-data_dir: c:/Users/ybrot/Desktop/course/UROP/GAGEii_modeling/data
+data_dir: /data
 dataset: generic
 
 
