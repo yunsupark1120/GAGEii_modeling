@@ -1,13 +1,13 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: EALSTM - More Training Dates
+experiment_name: EALSTM - unregulated_basins
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: ./basin_list/train.txt
+train_basin_file: ./basin_list/unregulated_basin_list.txt
 validation_basin_file: ./basin_list/complete_basin_list.txt
 test_basin_file: ./basin_list/complete_basin_list.txt
 
@@ -82,7 +82,7 @@ learning_rate:
 batch_size: 128
 
 # Number of training epochs
-epochs: 30
+epochs: 50
 
 # If True, clips norm of gradients
 clip_gradient_norm: 1
@@ -297,11 +297,11 @@ static_attributes:
 - dis_m3_pmx
 - dis_m3_pyr
 - lkv_mc_usu
-- rev_mc_usu
+# - rev_mc_usu
 - ria_ha_usu
 - riv_tc_usu
 - pop_ct_usu
-- dor_pc_pva
+# - dor_pc_pva
 - area
 - area_fraction_used_for_aggregation
 
