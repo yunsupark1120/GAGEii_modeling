@@ -1,22 +1,22 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: EALSTM - unregulated_basins
+experiment_name: EA-LSTM_Regional
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: ./basin_list/unregulated_basin_list.txt
-validation_basin_file: ./basin_list/complete_basin_list.txt
-test_basin_file: ./basin_list/complete_basin_list.txt
+train_basin_file: ./basin_list/regional_train.txt
+validation_basin_file: ./basin_list/regional_test.txt
+test_basin_file: ./basin_list/regional_test.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1980'
-train_end_date: '31/12/2012'
-validation_start_date: '01/01/2013'
+train_end_date: '31/12/2023'
+validation_start_date: '01/01/1980'
 validation_end_date: '31/12/2023'
-test_start_date: '01/01/2013'
+test_start_date: '01/01/1980'
 test_end_date: '31/12/2023'
 
 # fixed seed, leave empty to use a random seed
@@ -73,16 +73,13 @@ loss: MSE
 
 # specify learning rates to use starting at specific epochs (0 is the initial learning rate)
 learning_rate:
-    0: 0.001
-    25: 0.0005
-    50: 0.0003
-    75: 0.0001
+    0: 0.0001
 
 # Mini-batch size
 batch_size: 128
 
 # Number of training epochs
-epochs: 50
+epochs: 100
 
 # If True, clips norm of gradients
 clip_gradient_norm: 1
@@ -172,7 +169,7 @@ static_attributes:
 - glc_pc_s14
 - glc_pc_s11
 - glc_pc_s12
-# - glc_pc_s10
+- glc_pc_s10
 - kar_pc_sse
 - slp_dg_sav
 - tmp_dc_s07
@@ -297,11 +294,11 @@ static_attributes:
 - dis_m3_pmx
 - dis_m3_pyr
 - lkv_mc_usu
-# - rev_mc_usu
+- rev_mc_usu
 - ria_ha_usu
 - riv_tc_usu
 - pop_ct_usu
-# - dor_pc_pva
+- dor_pc_pva
 - area
 - area_fraction_used_for_aggregation
 
