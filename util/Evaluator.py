@@ -185,7 +185,7 @@ class Evaluator():
             nse = np.nan
             kge = np.nan
         else:
-            # NSE calculation (keep your existing code)
+            # NSE calculation 
             mean_observed = np.mean(observed_values)
             sum_squared_diff = np.sum((observed_values - simulated_values) ** 2)
             sum_squared_diff_mean = np.sum((observed_values - mean_observed) ** 2)
