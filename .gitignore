@@ -11,5 +11,10 @@ climate_discharge_data
 __pycache__/*
 metadata/*
 !metadata/*.ipynb
-poster_work/
-!poster_work/*.ipynb
+poster_work/csv_files
+poster_work/ne_lakes
+poster_work/runs
+poster_work/shapefiles
+poster_work/util
+poster_work/*.csv
+poster_work/ne_10m_lakes.zip
