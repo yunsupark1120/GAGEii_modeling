@@ -1,0 +1,34 @@
+{
+    "num_total_basins_in_gdf_study": 976,
+    "num_basins_with_valid_q_manual": 858,
+    "drainage_area_km2": {
+        "min": 4.070989133504773,
+        "max": 16387.626961822236,
+        "median": 303.77683881328636
+    },
+    "mean_annual_discharge_m3s": {
+        "min": 0.038029518619436875,
+        "max": 204.0976439032538,
+        "median": 3.5958989554699397,
+        "mean": 14.15369245712488
+    },
+    "mean_annual_precipitation_mm_yr": {
+        "min": 718.3792225212321,
+        "max": 1310.747983273107,
+        "median": 873.082511393965,
+        "mean": 879.4712245499052
+    },
+    "mean_annual_temperature_c": {
+        "min": -18.382394605560403,
+        "max": 38.21829635469791,
+        "median": 19.017897283830187,
+        "mean": 17.672509209713017
+    },
+    "dominant_land_cover_percentage": {
+        "Agriculture": 37.17948717948718,
+        "Forest": 35.43123543123543,
+        "Open Water": 19.93006993006993,
+        "Urban": 6.0606060606060606,
+        "Wetland": 1.3986013986013985
+    }
+}
