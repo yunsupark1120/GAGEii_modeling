@@ -1,22 +1,22 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: EA-LSTM_Regional
+experiment_name: EA-LSTM_Basin_Normalized
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: ./basin_list/regional_train.txt
-validation_basin_file: ./basin_list/regional_test.txt
-test_basin_file: ./basin_list/regional_test.txt
+train_basin_file: ./basin_list/basin_list_complete.txt
+validation_basin_file: ./basin_list/basin_list_complete.txt
+test_basin_file: ./basin_list/basin_list_complete.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1980'
-train_end_date: '31/12/2023'
-validation_start_date: '01/01/1980'
+train_end_date: '31/12/2012'
+validation_start_date: '01/01/2013'
 validation_end_date: '31/12/2023'
-test_start_date: '01/01/1980'
+test_start_date: '01/01/2013'
 test_end_date: '31/12/2023'
 
 # fixed seed, leave empty to use a random seed
