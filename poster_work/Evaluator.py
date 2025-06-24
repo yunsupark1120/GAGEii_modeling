@@ -102,7 +102,7 @@ class Evaluator():
                  csv_dir: str = "data/csv_files",
                  eval_list: str = r"basin_list\test.txt",
                  attributes_file: str = '../metadata/attributes.csv', # New parameter
-                 basin_area_scale_divisor: float = 100.0, # New parameter
+                 basin_area_scale_divisor: float = 1000.0, # New parameter
                  mean: float = 0.8561527661255196,
                  var: float = 5.06157279557463,
                  test_start_date: str = '01/01/2011',
@@ -186,18 +186,16 @@ class Evaluator():
         if self.apply_transformation:
             # 1. Inverse Z-score normalization
             sim = (sim * np.sqrt(self.var)) + self.mean
-            # 2. Inverse Log transformation
-            sim = np.exp(sim) - 1e-6 # Assuming EPSILON was 1e-6
-
-            # 3. Inverse Area Normalization (New Step)
+            
+            # 2. Inverse Area Normalization (Strategy 1)
             if self.attributes_df is not None:
                 try:
-                    # Ensure basin_id is treated as string for lookup if attributes_df index is string
-                    basin_area = self.attributes_df.loc[str(basin_id), 'area'] 
+                    # Use the same area column as in preprocessing
+                    basin_area = self.attributes_df.loc[str(basin_id), 'area']
                 except KeyError:
                     print(f"Warning: Basin ID {basin_id} not found in attributes file. Skipping area denormalization.")
                     basin_area = np.nan
-                
+
                 if pd.isna(basin_area) or basin_area <= 0:
                     print(f"Warning: Invalid area ({basin_area}) for basin {basin_id}. Skipping area denormalization.")
                 elif self.basin_area_scale_divisor == 0:
@@ -206,9 +204,10 @@ class Evaluator():
                     scaled_basin_area = basin_area / self.basin_area_scale_divisor
                     sim = sim * scaled_basin_area
             else:
-                # This case should ideally not be reached if apply_transformation is True
-                # and attributes_file was required in __init__
                 print("Warning: attributes_df not loaded, cannot perform area denormalization.")
+                
+            # 2. Inverse Log transformation
+            sim = np.exp(sim) - 1e-6  # EPSILON_S1
 
         # Convert all values in sim that are unrealistically high (e.g. > 1000 after denormalization)
         # This threshold might need adjustment based on expected discharge magnitudes
