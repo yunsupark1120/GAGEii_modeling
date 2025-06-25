@@ -101,14 +101,15 @@ class Evaluator():
                  epoch_num: int, 
                  csv_dir: str = "data/csv_files",
                  eval_list: str = r"basin_list\test.txt",
-                 attributes_file: str = '../metadata/attributes.csv', # New parameter
-                 basin_area_scale_divisor: float = 1000.0, # New parameter
+                 attributes_file: str = '../metadata/attributes.csv',
+                 basin_area_scale_divisor: float = 1000.0,
                  mean: float = 0.8561527661255196,
                  var: float = 5.06157279557463,
                  test_start_date: str = '01/01/2011',
                  test_end_date: str = '31/12/2022',
                  skip_sim: bool = False,
                  apply_transformation: bool = True,
+                 apply_basin_norm: bool = False,  # <--- Add this parameter
                  target_var: str = "discharge"
                  ):
         
@@ -124,6 +125,7 @@ class Evaluator():
         self.test_end_date = pd.to_datetime(test_end_date, format='%d/%m/%Y')
         self.skip_sim = skip_sim
         self.apply_transformation = apply_transformation
+        self.apply_basin_norm = apply_basin_norm  # <--- Store this flag
         self.target_var = target_var
         self.test_name = f"evaluate {run_dir} epoch {epoch_num}"
 
@@ -134,7 +136,7 @@ class Evaluator():
         if not self.eval_list.exists():
             raise FileNotFoundError(f"The specified evaluation list directory does not exist: {self.eval_list}")
         
-        if self.apply_transformation: # Load attributes only if needed
+        if self.apply_transformation and self.apply_basin_norm: # Load attributes only if needed
             if not self.attributes_file.exists():
                 raise FileNotFoundError(f"Attributes file not found: {self.attributes_file}")
             try:
@@ -207,23 +209,24 @@ class Evaluator():
             sim = (sim * np.sqrt(self.var)) + self.mean
             
             # 2. Inverse Area Normalization (Strategy 1)
-            if self.attributes_df is not None:
-                try:
-                    basin_area = self.attributes_df.loc[str(basin_id), 'area']
-                except KeyError:
-                    print(f"Warning: Basin ID {basin_id} not found in attributes file. Skipping area denormalization.")
-                    basin_area = np.nan
+            if self.apply_basin_norm:  # <--- Only apply if requested
+                if self.attributes_df is not None:
+                    try:
+                        basin_area = self.attributes_df.loc[str(basin_id), 'area']
+                    except KeyError:
+                        print(f"Warning: Basin ID {basin_id} not found in attributes file. Skipping area denormalization.")
+                        basin_area = np.nan
 
-                if pd.isna(basin_area) or basin_area <= 0:
-                    print(f"Warning: Invalid area ({basin_area}) for basin {basin_id}. Skipping area denormalization.")
-                elif self.basin_area_scale_divisor == 0:
-                    print(f"Warning: basin_area_scale_divisor is 0. Skipping area denormalization to avoid division by zero.")
+                    if pd.isna(basin_area) or basin_area <= 0:
+                        print(f"Warning: Invalid area ({basin_area}) for basin {basin_id}. Skipping area denormalization.")
+                    elif self.basin_area_scale_divisor == 0:
+                        print(f"Warning: basin_area_scale_divisor is 0. Skipping area denormalization to avoid division by zero.")
+                    else:
+                        scaled_basin_area = basin_area / self.basin_area_scale_divisor
+                        sim = sim * scaled_basin_area
                 else:
-                    scaled_basin_area = basin_area / self.basin_area_scale_divisor
-                    sim = sim * scaled_basin_area
-            else:
-                print("Warning: attributes_df not loaded, cannot perform area denormalization.")
-                
+                    print("Warning: attributes_df not loaded, cannot perform area denormalization.")
+
             # 3. Inverse Log transformation
             sim = np.exp(sim) - 1e-6  # EPSILON_S1
             
