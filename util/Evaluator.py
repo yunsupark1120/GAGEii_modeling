@@ -208,7 +208,10 @@ class Evaluator():
             # 1. Inverse Z-score normalization
             sim = (sim * np.sqrt(self.var)) + self.mean
             
-            # 2. Inverse Area Normalization (Strategy 1)
+            # 2. Inverse Log transformation
+            sim = np.exp(sim) - 1e-6  # EPSILON_S1
+            
+            # 3. Inverse Area Normalization 
             if self.apply_basin_norm:  # <--- Only apply if requested
                 if self.attributes_df is not None:
                     try:
@@ -227,8 +230,7 @@ class Evaluator():
                 else:
                     print("Warning: attributes_df not loaded, cannot perform area denormalization.")
 
-            # 3. Inverse Log transformation
-            sim = np.exp(sim) - 1e-6  # EPSILON_S1
+            
             
             # Outlier capping on the final, denormalized values
             sim[sim > 50000] = np.median(sim[sim <= 50000])
