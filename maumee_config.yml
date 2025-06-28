@@ -1,0 +1,205 @@
+ # --- Experiment configurations --------------------------------------------------------------------
+
+# experiment name, used as folder name
+experiment_name: Maumee_training_time_test
+
+# place to store run directory (if empty runs are stored in $cwd$/runs/)
+run_dir:
+
+# files to specify training, validation and test basins (relative to code root or absolute path)
+train_basin_file: ./basin_list/maumee.txt
+validation_basin_file: ./basin_list/maumee.txt
+test_basin_file: ./basin_list/maumee.txt
+
+# training, validation and test time periods (format = 'dd/mm/yyyy')
+train_start_date: '01/01/1992'
+train_end_date: '31/12/2016'
+validation_start_date: '01/01/2017'
+validation_end_date: '31/12/2021'
+test_start_date: '01/01/2017'
+test_end_date: '31/12/2021'
+
+# fixed seed, leave empty to use a random seed
+seed: 
+
+# which GPU (id) to use [in format of cuda:0, cuda:1 etc, or cpu or None]
+device: cuda:0
+
+# --- Validation configuration ---------------------------------------------------------------------
+
+# specify after how many epochs to perform validation
+validate_every: 1
+
+# specify how many random basins to use for validation
+validate_n_random_basins: 200
+
+# specify which metrics to calculate during validation (see codebase.evaluation.metrics)
+metrics:
+- NSE
+
+# --- Model configuration --------------------------------------------------------------------------
+
+# base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
+# (has to match the if statement in modelzoo/__init__.py)
+model: ealstm
+
+# prediction head [regression, mdn, umal]. Define the head specific parameters below
+head: regression
+# n_distributions: 3
+# n_samples: 10            
+# negative_sample_handling: clip
+
+
+# ----> General settings <----
+
+# Number of cell states of the LSTM
+hidden_size: 256
+
+# Initial bias value of the forget gate
+initial_forget_bias: 3
+
+# Dropout applied to the output of the LSTM
+output_dropout: 0.3
+
+output_activation: linear
+
+# --- Training configuration -----------------------------------------------------------------------
+
+# specify optimizer [Adam, Adadelta]
+optimizer: Adam
+
+# specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
+loss: MSE
+
+# specify learning rates to use starting at specific epochs (0 is the initial learning rate)
+learning_rate:
+    0: 0.0001
+
+# Mini-batch size
+batch_size: 128
+
+# Number of training epochs
+epochs: 100
+
+# If True, clips norm of gradients
+clip_gradient_norm: 1
+
+# Defines which time steps are used to calculate the loss. Can't be larger than seq_length
+predict_last_n: 1
+
+# Length of the input sequence
+seq_length: 365
+
+# Number of parallel workers used in the data pipeline
+num_workers: 8
+
+# Log the training loss every n steps
+log_interval: 5
+
+# If true, writes logging results into tensorboard file
+log_tensorboard: True
+
+# Save model weights every n epochs
+save_weights_every: 1
+
+# Store the results of the validation to disk
+save_validation_results: True
+
+# --- Data configurations --------------------------------------------------------------------------
+
+data_dir: ./data
+dataset: generic
+
+
+# Forcing product [daymet, maurer, maurer_extended, nldas, nldas_extended]
+# can be either a list of forcings or a single forcing product
+# forcings:
+# - daymet
+
+# variables to use as time series input (names match the data file column headers)
+# Note: In case of multiple input forcing products, you have to append the forcing product behind
+# each variable. E.g. 'prcp(mm/day)' of the daymet product is 'prcp(mm/day)_daymet'
+
+
+dynamic_inputs:
+  - pcp
+  - max_temperature
+  - min_temperature
+  - rh
+  - wnd
+  - slr
+
+
+
+static_attributes:
+- lat
+- lon
+- area
+- slope
+- len1
+- csl
+- wid1
+- dep1
+- elev
+- clay
+- silt
+- sand
+- AGRL
+- WETW
+- URLD
+- URMD
+- URHD
+- UIDU
+- BARN
+- FRSD
+- FRSE
+- FRST
+- SHRB
+- RNGE
+- PAST
+- WEWO
+- WEHB
+- CC
+- CCS
+- CS
+- CSS
+- CSW
+- CWC
+- SCC
+- SC
+- SSC
+- SS
+- SSW
+- SWC
+- SWS
+- WCC
+- WCS
+- WSC
+- WSS
+- WSW
+- AGRL_TD
+- CC_TD
+- CCS_TD
+- CS_TD
+- CSS_TD
+- CSW_TD
+- CWC_TD
+- SCC_TD
+- SC_TD
+- SSC_TD
+- SS_TD
+- SSW_TD
+- SWC_TD
+- SWS_TD
+- WCC_TD
+- WCS_TD
+- WSC_TD
+- WSS_TD
+- WSW_TD
+
+
+
+# which columns to use as target
+target_variables:
+- sedyld
+
