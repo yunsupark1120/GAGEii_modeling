@@ -102,7 +102,7 @@ class Evaluator():
                  csv_dir: str = "data/csv_files",
                  eval_list: str = r"basin_list\test.txt",
                  attributes_file: str = '../metadata/attributes.csv',
-                 basin_area_scale_divisor: float = 1000.0,
+                 basin_area_scale_divisor: float = 100.0,
                  mean: float = 0.8561527661255196,
                  var: float = 5.06157279557463,
                  test_start_date: str = '01/01/2011',
