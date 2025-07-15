@@ -1,136 +1,45 @@
- # --- Experiment configurations --------------------------------------------------------------------
-
-# experiment name, used as folder name
-experiment_name: EA-LSTM_Basin_Normalized
-
-# place to store run directory (if empty runs are stored in $cwd$/runs/)
-run_dir:
-
-# files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: ./basin_list/basin_list_complete.txt
-validation_basin_file: ./basin_list/basin_list_complete.txt
-test_basin_file: ./basin_list/basin_list_complete.txt
-
-# training, validation and test time periods (format = 'dd/mm/yyyy')
-train_start_date: '01/01/1980'
-train_end_date: '31/12/2012'
-validation_start_date: '01/01/2013'
-validation_end_date: '31/12/2023'
-test_start_date: '01/01/2013'
-test_end_date: '31/12/2023'
-
-# fixed seed, leave empty to use a random seed
-seed: 
-
-# which GPU (id) to use [in format of cuda:0, cuda:1 etc, or cpu or None]
+batch_size: 128
+clip_gradient_norm: 1
+commit_hash:
+data_dir: data
+dataset: generic
 device: cuda:0
-
-# --- Validation configuration ---------------------------------------------------------------------
-
-# specify after how many epochs to perform validation
-validate_every: 1
-
-# specify how many random basins to use for validation
-validate_n_random_basins: 200
-
-# specify which metrics to calculate during validation (see codebase.evaluation.metrics)
+dynamic_inputs:
+- dayl
+- prcp
+- srad
+- swe
+- tmax
+- tmin
+- vp
+epochs: 100
+experiment_name: EA-LSTM_Regional_Area_Norm
+head: regression
+hidden_size: 256
+img_log_dir: 
+  C:\Users\ybrot\Desktop\course\UROP\GAGEii_modeling\runs\EA-LSTM_Regional_0604_152713\img_log
+initial_forget_bias: 3
+learning_rate:
+  0: 0.0001
+log_interval: 5
+log_tensorboard: true
+loss: MSE
 metrics:
 - NSE
-
-# --- Model configuration --------------------------------------------------------------------------
-
-# base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
-# (has to match the if statement in modelzoo/__init__.py)
 model: ealstm
-
-# prediction head [regression, mdn, umal]. Define the head specific parameters below
-head: regression
-# n_distributions: 3
-# n_samples: 10            
-# negative_sample_handling: clip
-
-
-# ----> General settings <----
-
-# Number of cell states of the LSTM
-hidden_size: 256
-
-# Initial bias value of the forget gate
-initial_forget_bias: 3
-
-# Dropout applied to the output of the LSTM
-output_dropout: 0.3
-
-output_activation: linear
-
-# --- Training configuration -----------------------------------------------------------------------
-
-# specify optimizer [Adam, Adadelta]
-optimizer: Adam
-
-# specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
-loss: MSE
-
-# specify learning rates to use starting at specific epochs (0 is the initial learning rate)
-learning_rate:
-    0: 0.0001
-
-# Mini-batch size
-batch_size: 128
-
-# Number of training epochs
-epochs: 100
-
-# If True, clips norm of gradients
-clip_gradient_norm: 1
-
-# Defines which time steps are used to calculate the loss. Can't be larger than seq_length
-predict_last_n: 1
-
-# Length of the input sequence
-seq_length: 365
-
-# Number of parallel workers used in the data pipeline
 num_workers: 8
-
-# Log the training loss every n steps
-log_interval: 5
-
-# If true, writes logging results into tensorboard file
-log_tensorboard: True
-
-# Save model weights every n epochs
+number_of_basins: 780
+optimizer: Adam
+output_activation: linear
+output_dropout: 0.3
+package_version: 1.11.0
+predict_last_n: 1
+run_dir: 
+  C:\Users\ybrot\Desktop\course\UROP\GAGEii_modeling\runs
+save_validation_results: true
 save_weights_every: 1
-
-# Store the results of the validation to disk
-save_validation_results: True
-
-# --- Data configurations --------------------------------------------------------------------------
-
-data_dir: ./data
-dataset: generic
-
-
-# Forcing product [daymet, maurer, maurer_extended, nldas, nldas_extended]
-# can be either a list of forcings or a single forcing product
-# forcings:
-# - daymet
-
-# variables to use as time series input (names match the data file column headers)
-# Note: In case of multiple input forcing products, you have to append the forcing product behind
-# each variable. E.g. 'prcp(mm/day)' of the daymet product is 'prcp(mm/day)_daymet'
-
-
-dynamic_inputs:
-  - dayl
-  - prcp
-  - srad
-  - swe
-  - tmax
-  - tmin
-  - vp
-
-
+seed: 316926
+seq_length: 365
 static_attributes:
 - sgr_dk_sav
 - glc_pc_s06
@@ -301,10 +210,18 @@ static_attributes:
 - dor_pc_pva
 - area
 - area_fraction_used_for_aggregation
-
-
-
-# which columns to use as target
 target_variables:
 - discharge
-
+test_basin_file: basin_list\regional_test.txt
+test_end_date: 31/12/2023
+test_start_date: 01/01/1980
+train_basin_file: basin_list\regional_train.txt
+train_dir: 
+  C:\Users\ybrot\Desktop\course\UROP\GAGEii_modeling\runs\EA-LSTM_Regional_0604_152713\train_data
+train_end_date: 31/12/2023
+train_start_date: 01/01/1980
+validate_every: 1
+validate_n_random_basins: 200
+validation_basin_file: basin_list\regional_test.txt
+validation_end_date: 31/12/2023
+validation_start_date: 01/01/1980

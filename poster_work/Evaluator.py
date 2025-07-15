@@ -101,14 +101,15 @@ class Evaluator():
                  epoch_num: int, 
                  csv_dir: str = "data/csv_files",
                  eval_list: str = r"basin_list\test.txt",
-                 attributes_file: str = '../metadata/attributes.csv', # New parameter
-                 basin_area_scale_divisor: float = 1000.0, # New parameter
+                 attributes_file: str = '../metadata/attributes.csv',
+                 basin_area_scale_divisor: float = 100.0,
                  mean: float = 0.8561527661255196,
                  var: float = 5.06157279557463,
                  test_start_date: str = '01/01/2011',
                  test_end_date: str = '31/12/2022',
                  skip_sim: bool = False,
                  apply_transformation: bool = True,
+                 apply_basin_norm: bool = False,  # <--- Add this parameter
                  target_var: str = "discharge"
                  ):
         
@@ -124,6 +125,7 @@ class Evaluator():
         self.test_end_date = pd.to_datetime(test_end_date, format='%d/%m/%Y')
         self.skip_sim = skip_sim
         self.apply_transformation = apply_transformation
+        self.apply_basin_norm = apply_basin_norm  # <--- Store this flag
         self.target_var = target_var
         self.test_name = f"evaluate {run_dir} epoch {epoch_num}"
 
@@ -134,7 +136,7 @@ class Evaluator():
         if not self.eval_list.exists():
             raise FileNotFoundError(f"The specified evaluation list directory does not exist: {self.eval_list}")
         
-        if self.apply_transformation: # Load attributes only if needed
+        if self.apply_transformation and self.apply_basin_norm: # Load attributes only if needed
             if not self.attributes_file.exists():
                 raise FileNotFoundError(f"Attributes file not found: {self.attributes_file}")
             try:
@@ -180,71 +182,60 @@ class Evaluator():
             results = pickle.load(fp)
 
         qsim = results[basin_id]['1D']['xr']['discharge_sim'] # Assumes target is 'discharge'
-        sim = qsim.values.copy() # Use .copy() to avoid modifying the original loaded data
+        sim_normalized = qsim.values.copy() # Raw, normalized predictions
         dates = qsim['date'].values
 
-        if self.apply_transformation:
-            # 1. Inverse Z-score normalization
-            sim = (sim * np.sqrt(self.var)) + self.mean
-            
-            # 2. Inverse Area Normalization (Strategy 1)
-            if self.attributes_df is not None:
-                try:
-                    # Use the same area column as in preprocessing
-                    basin_area = self.attributes_df.loc[str(basin_id), 'area']
-                except KeyError:
-                    print(f"Warning: Basin ID {basin_id} not found in attributes file. Skipping area denormalization.")
-                    basin_area = np.nan
-
-                if pd.isna(basin_area) or basin_area <= 0:
-                    print(f"Warning: Invalid area ({basin_area}) for basin {basin_id}. Skipping area denormalization.")
-                elif self.basin_area_scale_divisor == 0:
-                    print(f"Warning: basin_area_scale_divisor is 0. Skipping area denormalization to avoid division by zero.")
-                else:
-                    scaled_basin_area = basin_area / self.basin_area_scale_divisor
-                    sim = sim * scaled_basin_area
-            else:
-                print("Warning: attributes_df not loaded, cannot perform area denormalization.")
-                
-            # 2. Inverse Log transformation
-            sim = np.exp(sim) - 1e-6  # EPSILON_S1
-
-        # Convert all values in sim that are unrealistically high (e.g. > 1000 after denormalization)
-        # This threshold might need adjustment based on expected discharge magnitudes
-        # A more robust approach might be to cap based on observed data range or physical limits
-        sim[sim > 50000] = np.median(sim[sim <= 50000]) # Example: cap very large outliers
-
+        # Load and filter observed data first
         csv_file_path = self.csv_dir / f"{basin_id}.csv"
         df_obs = pd.read_csv(csv_file_path, index_col='date', parse_dates=True)
-        
-        # Filter observed data to the specified test period
-        # Ensure the index is timezone-naive if dates from qsim are timezone-naive
         if df_obs.index.tz is not None:
             df_obs.index = df_obs.index.tz_localize(None)
-        
         df_obs = df_obs.loc[self.test_start_date:self.test_end_date, [self.target_var]]
 
-        obs = df_obs[self.target_var].values
-        
-        # Align observed and simulated arrays based on common dates
-        # Create DataFrames for easier alignment
-        sim_df = pd.DataFrame({'date': pd.to_datetime(dates), 'simulated': sim.flatten()}).set_index('date')
-        
-        # Ensure df_obs index is also named 'date' for merging, or reset and rename
-        df_obs_for_merge = df_obs.copy()
-        if df_obs_for_merge.index.name != 'date':
-             df_obs_for_merge.index.name = 'date'
-
-        # Merge based on date index
-        merged_df = pd.merge(df_obs_for_merge, sim_df, left_index=True, right_index=True, how='inner')
-        
-        # Drop rows with any NaNs that might have resulted from merge or were in original data
+        # Create DataFrame from predictions and align with observed data
+        sim_df = pd.DataFrame({'date': pd.to_datetime(dates), 'simulated': sim_normalized.flatten()}).set_index('date')
+        merged_df = pd.merge(df_obs, sim_df, left_index=True, right_index=True, how='inner')
         merged_df.dropna(subset=[self.target_var, 'simulated'], inplace=True)
 
         observed_values = merged_df[self.target_var].values
-        simulated_values = merged_df['simulated'].values
+        simulated_values = merged_df['simulated'].values # These are still normalized
         aligned_dates = merged_df.index.values
 
+        if self.apply_transformation:
+            # Denormalize the ALIGNED subset of predictions
+            sim = simulated_values.copy()
+            
+            # 1. Inverse Z-score normalization
+            sim = (sim * np.sqrt(self.var)) + self.mean
+            
+            # 2. Inverse Log transformation
+            sim = np.exp(sim) - 1e-6  # EPSILON_S1
+            
+            # 3. Inverse Area Normalization 
+            if self.apply_basin_norm:  # <--- Only apply if requested
+                if self.attributes_df is not None:
+                    try:
+                        basin_area = self.attributes_df.loc[str(basin_id), 'area']
+                    except KeyError:
+                        print(f"Warning: Basin ID {basin_id} not found in attributes file. Skipping area denormalization.")
+                        basin_area = np.nan
+
+                    if pd.isna(basin_area) or basin_area <= 0:
+                        print(f"Warning: Invalid area ({basin_area}) for basin {basin_id}. Skipping area denormalization.")
+                    elif self.basin_area_scale_divisor == 0:
+                        print(f"Warning: basin_area_scale_divisor is 0. Skipping area denormalization to avoid division by zero.")
+                    else:
+                        scaled_basin_area = basin_area / self.basin_area_scale_divisor
+                        sim = sim * scaled_basin_area
+                else:
+                    print("Warning: attributes_df not loaded, cannot perform area denormalization.")
+
+            
+            
+            # Outlier capping on the final, denormalized values
+            sim[sim > 50000] = np.median(sim[sim <= 50000])
+            
+            simulated_values = sim # Replace with the final denormalized values
 
         if observed_values.size == 0 or simulated_values.size == 0:
             nse = np.nan

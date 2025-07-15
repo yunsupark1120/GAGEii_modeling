@@ -1,0 +1,310 @@
+ # --- Experiment configurations --------------------------------------------------------------------
+
+# experiment name, used as folder name
+experiment_name: EA-LSTM_Basin_Normalized
+
+# place to store run directory (if empty runs are stored in $cwd$/runs/)
+run_dir:
+
+# files to specify training, validation and test basins (relative to code root or absolute path)
+train_basin_file: ./basin_list/basin_list_complete.txt
+validation_basin_file: ./basin_list/basin_list_complete.txt
+test_basin_file: ./basin_list/basin_list_complete.txt
+
+# training, validation and test time periods (format = 'dd/mm/yyyy')
+train_start_date: '01/01/1980'
+train_end_date: '31/12/2012'
+validation_start_date: '01/01/2013'
+validation_end_date: '31/12/2023'
+test_start_date: '01/01/2013'
+test_end_date: '31/12/2023'
+
+# fixed seed, leave empty to use a random seed
+seed: 
+
+# which GPU (id) to use [in format of cuda:0, cuda:1 etc, or cpu or None]
+device: cuda:0
+
+# --- Validation configuration ---------------------------------------------------------------------
+
+# specify after how many epochs to perform validation
+validate_every: 1
+
+# specify how many random basins to use for validation
+validate_n_random_basins: 200
+
+# specify which metrics to calculate during validation (see codebase.evaluation.metrics)
+metrics:
+- NSE
+
+# --- Model configuration --------------------------------------------------------------------------
+
+# base model type [lstm, ealstm, cudalstm, embcudalstm, shortcutlstm, dropoutlstm, cudalstminitialh]
+# (has to match the if statement in modelzoo/__init__.py)
+model: ealstm
+
+# prediction head [regression, mdn, umal]. Define the head specific parameters below
+head: regression
+# n_distributions: 3
+# n_samples: 10            
+# negative_sample_handling: clip
+
+
+# ----> General settings <----
+
+# Number of cell states of the LSTM
+hidden_size: 256
+
+# Initial bias value of the forget gate
+initial_forget_bias: 3
+
+# Dropout applied to the output of the LSTM
+output_dropout: 0.3
+
+output_activation: linear
+
+# --- Training configuration -----------------------------------------------------------------------
+
+# specify optimizer [Adam, Adadelta]
+optimizer: Adam
+
+# specify loss [MSE, NSE, RMSE, UMALLoss, MDNLoss]
+loss: MSE
+
+# specify learning rates to use starting at specific epochs (0 is the initial learning rate)
+learning_rate:
+    0: 0.0001
+
+# Mini-batch size
+batch_size: 128
+
+# Number of training epochs
+epochs: 100
+
+# If True, clips norm of gradients
+clip_gradient_norm: 1
+
+# Defines which time steps are used to calculate the loss. Can't be larger than seq_length
+predict_last_n: 1
+
+# Length of the input sequence
+seq_length: 365
+
+# Number of parallel workers used in the data pipeline
+num_workers: 8
+
+# Log the training loss every n steps
+log_interval: 5
+
+# If true, writes logging results into tensorboard file
+log_tensorboard: True
+
+# Save model weights every n epochs
+save_weights_every: 1
+
+# Store the results of the validation to disk
+save_validation_results: True
+
+# --- Data configurations --------------------------------------------------------------------------
+
+data_dir: ./data
+dataset: generic
+
+
+# Forcing product [daymet, maurer, maurer_extended, nldas, nldas_extended]
+# can be either a list of forcings or a single forcing product
+# forcings:
+# - daymet
+
+# variables to use as time series input (names match the data file column headers)
+# Note: In case of multiple input forcing products, you have to append the forcing product behind
+# each variable. E.g. 'prcp(mm/day)' of the daymet product is 'prcp(mm/day)_daymet'
+
+
+dynamic_inputs:
+  - dayl
+  - prcp
+  - srad
+  - swe
+  - tmax
+  - tmin
+  - vp
+
+
+static_attributes:
+- sgr_dk_sav
+- glc_pc_s06
+- nli_ix_sav
+- glc_pc_s04
+- glc_pc_s02
+- glc_pc_s09
+- swc_pc_s09
+- ele_mt_smx
+- tbi_cl_smj
+- swc_pc_s01
+- swc_pc_s02
+- swc_pc_s03
+- swc_pc_s04
+- swc_pc_s05
+- swc_pc_s06
+- swc_pc_s07
+- swc_pc_s08
+- crp_pc_sse
+- glc_pc_s22
+- glc_pc_s20
+- wet_pc_sg1
+- wet_pc_sg2
+- pac_pc_sse
+- swc_pc_s10
+- swc_pc_s11
+- swc_pc_s12
+- clz_cl_smj
+- gwt_cm_sav
+- glc_pc_s18
+- hft_ix_s93
+- glc_pc_s15
+- ire_pc_sse
+- glc_pc_s16
+- glc_pc_s13
+- glc_pc_s14
+- glc_pc_s11
+- glc_pc_s12
+- glc_pc_s10
+- kar_pc_sse
+- slp_dg_sav
+- tmp_dc_s07
+- tmp_dc_s08
+- tmp_dc_s05
+- tmp_dc_s06
+- tmp_dc_s09
+- for_pc_sse
+- aet_mm_s06
+- aet_mm_s05
+- aet_mm_s08
+- aet_mm_s07
+- aet_mm_s09
+- tmp_dc_s10
+- tmp_dc_s11
+- aet_mm_s02
+- aet_mm_s01
+- tmp_dc_s12
+- aet_mm_s04
+- aet_mm_s03
+- lit_cl_smj
+- tmp_dc_s03
+- tmp_dc_s04
+- tmp_dc_s01
+- tmp_dc_s02
+- cls_cl_smj
+- pre_mm_syr
+- pnv_pc_s04
+- pnv_pc_s05
+- rdd_mk_sav
+- ele_mt_smn
+- pnv_pc_s08
+- pnv_pc_s09
+- pnv_pc_s06
+- wet_cl_smj
+- snw_pc_syr
+- pnv_pc_s10
+- cmi_ix_syr
+- pet_mm_s11
+- pet_mm_s12
+- pet_mm_s10
+- tmp_dc_smn
+- wet_pc_s02
+- wet_pc_s03
+- wet_pc_s01
+- hdi_ix_sav
+- glc_cl_smj
+- swc_pc_syr
+- hft_ix_s09
+- soc_th_sav
+- gdp_ud_sav
+- gdp_ud_ssu
+- tmp_dc_smx
+- cly_pc_sav
+- pet_mm_s02
+- pet_mm_s03
+- pet_mm_s01
+- snw_pc_smx
+- ppd_pk_sav
+- pet_mm_s08
+- aet_mm_s11
+- pet_mm_s09
+- aet_mm_s10
+- pet_mm_s06
+- pet_mm_s07
+- aet_mm_s12
+- pet_mm_s04
+- pet_mm_s05
+- inu_pc_slt
+- ero_kh_sav
+- aet_mm_syr
+- cmi_ix_s10
+- cmi_ix_s11
+- cmi_ix_s12
+- ari_ix_sav
+- tmp_dc_syr
+- tec_cl_smj
+- fmh_cl_smj
+- inu_pc_smn
+- pnv_cl_smj
+- pre_mm_s08
+- pre_mm_s09
+- run_mm_syr
+- pre_mm_s06
+- pre_mm_s07
+- pre_mm_s04
+- pre_mm_s05
+- snd_pc_sav
+- pre_mm_s02
+- pre_mm_s03
+- ele_mt_sav
+- pre_mm_s01
+- urb_pc_sse
+- lka_pc_sse
+- pre_mm_s10
+- snw_pc_s01
+- snw_pc_s02
+- snw_pc_s03
+- snw_pc_s04
+- snw_pc_s05
+- snw_pc_s06
+- snw_pc_s07
+- snw_pc_s08
+- snw_pc_s09
+- inu_pc_smx
+- pre_mm_s11
+- pre_mm_s12
+- cmi_ix_s07
+- cmi_ix_s08
+- cmi_ix_s05
+- cmi_ix_s06
+- cmi_ix_s09
+- snw_pc_s10
+- snw_pc_s11
+- snw_pc_s12
+- cmi_ix_s03
+- cmi_ix_s04
+- cmi_ix_s01
+- cmi_ix_s02
+- pst_pc_sse
+- dis_m3_pmn
+- dis_m3_pmx
+- dis_m3_pyr
+- lkv_mc_usu
+- rev_mc_usu
+- ria_ha_usu
+- riv_tc_usu
+- pop_ct_usu
+- dor_pc_pva
+- area
+- area_fraction_used_for_aggregation
+
+
+
+# which columns to use as target
+target_variables:
+- discharge
+
