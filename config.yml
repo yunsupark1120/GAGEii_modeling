@@ -13,7 +13,7 @@ dynamic_inputs:
 - tmin
 - vp
 epochs: 100
-experiment_name: EA-LSTM_Regional_Area_Norm
+experiment_name: LSTM_Regional_Area_Norm
 head: regression
 hidden_size: 256
 img_log_dir: 
@@ -26,7 +26,7 @@ log_tensorboard: true
 loss: MSE
 metrics:
 - NSE
-model: ealstm
+model: lstm
 num_workers: 8
 number_of_basins: 780
 optimizer: Adam
