@@ -1,7 +1,6 @@
 from pathlib import Path
 import argparse
 
-import torch
 from neuralhydrology.nh_run import start_run
 
 def main():
@@ -20,4 +19,4 @@ def main():
 
 if __name__ == "__main__":
     # main()
-    start_run(config_file=Path('config.yml'))
+    start_run(config_file=Path('config_gl.yml'))
