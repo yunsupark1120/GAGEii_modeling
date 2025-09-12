@@ -18,3 +18,5 @@ poster_work/shapefiles
 poster_work/util
 poster_work/*.csv
 poster_work/ne_10m_lakes.zip
+poster_work
+Performance_map.qgz
