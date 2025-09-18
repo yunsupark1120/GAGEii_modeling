@@ -22,4 +22,7 @@ poster_work
 Performance_map.qgz
 notebooks/shapefiles
 notebooks/csv_files/GL_NWM3.csv
+venv
 notebooks/csv_files/basin_discharge_matrix.csv
+*.pyc
+util/__pycache__

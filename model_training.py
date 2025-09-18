@@ -19,4 +19,4 @@ def main():
 
 if __name__ == "__main__":
     # main()
-    start_run(config_file=Path('config_gl.yml'))
+    start_run(config_file=Path('config_regional.yml'))

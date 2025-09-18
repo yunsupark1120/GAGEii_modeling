@@ -62,7 +62,7 @@ class Evaluator():
         - target_var: str
             Name of the target variable - default to "discharge"
     
-    -------------------   
+    -------------------    
     Member Functions:
         public:
         - plot_validation() -> None:
@@ -85,6 +85,9 @@ class Evaluator():
             
         - plot_kge_distribution(ignore_neg = True) -> None:
             plot the distribution of kge values over multiple basins
+
+        - evaluate_extremes(high_flow_quantile=0.95, low_flow_quantile=0.10) -> pd.DataFrame:
+            NEW: Performs stress tests on extreme high and low flow events.
             
         private:
         - __evalute_single__() -> float:
@@ -109,7 +112,7 @@ class Evaluator():
                  test_end_date: str = '31/12/2022',
                  skip_sim: bool = False,
                  apply_transformation: bool = True,
-                 apply_basin_norm: bool = False,  # <--- Add this parameter
+                 apply_basin_norm: bool = False,
                  target_var: str = "discharge"
                  ):
         
@@ -117,15 +120,15 @@ class Evaluator():
         self.epoch_num = epoch_num
         self.csv_dir = Path(csv_dir)
         self.eval_list = Path(eval_list)
-        self.attributes_file = Path(attributes_file) # Store new parameter
-        self.basin_area_scale_divisor = basin_area_scale_divisor # Store new parameter
+        self.attributes_file = Path(attributes_file)
+        self.basin_area_scale_divisor = basin_area_scale_divisor
         self.mean = mean
         self.var = var
         self.test_start_date = pd.to_datetime(test_start_date, format='%d/%m/%Y')
         self.test_end_date = pd.to_datetime(test_end_date, format='%d/%m/%Y')
         self.skip_sim = skip_sim
         self.apply_transformation = apply_transformation
-        self.apply_basin_norm = apply_basin_norm  # <--- Store this flag
+        self.apply_basin_norm = apply_basin_norm
         self.target_var = target_var
         self.test_name = f"evaluate {run_dir} epoch {epoch_num}"
 
@@ -136,21 +139,18 @@ class Evaluator():
         if not self.eval_list.exists():
             raise FileNotFoundError(f"The specified evaluation list directory does not exist: {self.eval_list}")
         
-        if self.apply_transformation and self.apply_basin_norm: # Load attributes only if needed
+        if self.apply_transformation and self.apply_basin_norm:
             if not self.attributes_file.exists():
                 raise FileNotFoundError(f"Attributes file not found: {self.attributes_file}")
             try:
                 self.attributes_df = pd.read_csv(self.attributes_file)
-                # Ensure gauge_id column exists before setting as index
                 if 'gauge_id' not in self.attributes_df.columns:
-                    raise KeyError("'gauge_id' column not found in attributes file. Please ensure it's present.")
+                    raise KeyError("'gauge_id' column not found in attributes file.")
                 self.attributes_df.set_index('gauge_id', inplace=True)
-            except KeyError as e:
-                raise KeyError(f"{e} Check that '{self.attributes_file}' has a 'gauge_id' column.")
             except Exception as e:
                 raise RuntimeError(f"Error loading attributes file {self.attributes_file}: {e}")
         else:
-            self.attributes_df = None # Explicitly set to None if not loaded
+            self.attributes_df = None
 
         if not skip_sim:
             eval_run(run_dir = self.run_dir, period = "test")
@@ -288,9 +288,9 @@ class Evaluator():
         
         result_df['Performance'] = result_df['NSE'].apply(
             lambda x: 'Excellent' if x > 0.75 else 
-                    'Good' if x >= 0.36 else 
-                    'Unsatisfactory' if x >= 0 else 
-                    'Negative' if pd.notna(x) else 'N/A' # Handle NaN explicitly
+                      'Good' if x >= 0.36 else 
+                      'Unsatisfactory' if x >= 0 else 
+                      'Negative' if pd.notna(x) else 'N/A' # Handle NaN explicitly
         )
         
         result_df.loc[result_df['NSE'].isnull(), 'Performance'] = "N/A"
@@ -369,7 +369,7 @@ class Evaluator():
             raise ValueError(f"Incorrect plot type: {plot_type}. Expected 'Median', 'Mean', or 'Max'.")
 
         if column_name not in self.__validation_df.columns:
-             raise ValueError(f"Validation data for '{column_name}' not found. Available columns: {self.__validation_df.columns.tolist()}")
+                 raise ValueError(f"Validation data for '{column_name}' not found. Available columns: {self.__validation_df.columns.tolist()}")
 
         validation_values = self.__validation_df[column_name]
         
@@ -393,7 +393,7 @@ class Evaluator():
     def get_validation(self):
         return self.__validation_df
     
-    def plot_prediction(self, basin_id: str):
+    def plot_prediction(self, basin_id: str, legend_fontsize: int = 10, x_label_fontsize: int = 10, y_label_fontsize: int = 10):
         try:
             nse, kge, sim, obs, date_aligned = self.__evaluate_single__(basin_id)
         except Exception as e:
@@ -407,10 +407,10 @@ class Evaluator():
         plt.figure(figsize=(14, 7))
         plt.plot(date_aligned, obs, label='Observed', alpha=0.7)
         plt.plot(date_aligned, sim, label='Simulated', alpha=0.7)
-        plt.xlabel('Date')
-        plt.ylabel(self.target_var.capitalize()) # Use target_var
+        plt.xlabel('Date', fontsize = x_label_fontsize)
+        plt.ylabel(self.target_var.capitalize(), fontsize = y_label_fontsize) # Use target_var
         plt.title(f'Basin {basin_id} Observed vs Simulated\nNSE: {nse:.3f}, KGE: {kge:.3f}')
-        plt.legend()
+        plt.legend(fontsize = legend_fontsize)
         plt.grid(True)
         plt.xticks(rotation=45)
         plt.tight_layout()
@@ -471,4 +471,192 @@ class Evaluator():
         plt.xlabel("KGE")
         plt.ylabel("Frequency")
         plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.show()
+
+    # ------------------- NEW METHODS START HERE -------------------
+
+    def __calculate_event_metrics(self, observed: np.ndarray, simulated: np.ndarray, quantile: float, event_type: str):
+        """
+        Private helper to calculate PBIAS and volume metrics for specific flow events.
+        
+        Args:
+            observed: Array of observed streamflow.
+            simulated: Array of simulated streamflow.
+            quantile: The quantile to define the event threshold (e.g., 0.95 for high flow).
+            event_type: Either 'high' or 'low'.
+            
+        Returns:
+            A tuple containing (PBIAS, Volume_Fraction).
+        """
+        # Ensure there are non-zero flows to calculate quantiles on, avoiding warnings/errors
+        valid_obs = observed[observed > 0]
+        if len(valid_obs) == 0:
+            return np.nan, np.nan
+
+        threshold = np.quantile(valid_obs, quantile)
+        
+        if event_type == 'high':
+            event_indices = observed >= threshold
+        elif event_type == 'low':
+            event_indices = observed <= threshold
+        else:
+            raise ValueError("event_type must be 'high' or 'low'")
+
+        if not np.any(event_indices):
+            return np.nan, np.nan  # No events of this type found in the basin
+
+        obs_event = observed[event_indices]
+        sim_event = simulated[event_indices]
+        
+        # Percentage Bias (PBIAS) for the event
+        numerator = np.sum(sim_event - obs_event)
+        denominator = np.sum(obs_event)
+        pbia = (numerator / denominator) * 100 if denominator != 0 else np.nan
+
+        # Fraction of Volume (FHV or FLV)
+        # This is the sum of simulated flow during the event period divided by the total observed flow
+        total_obs_volume = np.sum(observed)
+        volume_fraction = np.sum(sim_event) / total_obs_volume if total_obs_volume != 0 else np.nan
+
+        return pbia, volume_fraction
+
+    def evaluate_extremes(self, high_flow_quantile: float = 0.95, low_flow_quantile: float = 0.10):
+        """
+        Performs stress tests on extreme events (high and low flows) using existing predictions.
+
+        This function calculates event-based metrics to assess model performance during
+        hydrologically critical periods, which may be obscured by overall metrics like NSE.
+
+        Args:
+            high_flow_quantile (float): The quantile of observed flow to define high-flow (flood) events. Defaults to 0.95.
+            low_flow_quantile (float): The quantile of observed flow to define low-flow (drought) events. Defaults to 0.10.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing basin IDs and the calculated metrics:
+                          - PBIAS_high: Percentage Bias during high-flow events.
+                          - FHV: Fraction of High-Flow Volume.
+                          - PBIAS_low: Percentage Bias during low-flow events.
+                          - FLV: Fraction of Low-Flow Volume.
+        """
+        basin_ids = self.__result_df['basin_id'].tolist()
+        extreme_metrics = []
+
+        print("Evaluating extreme event metrics...")
+        for basin_id in tqdm(basin_ids):
+            try:
+                _, _, sim, obs, _ = self.__evaluate_single__(basin_id)
+                
+                # Check if there is enough data to calculate meaningful quantiles
+                if obs is None or sim is None or len(obs) < 30:
+                    metrics = {'basin_id': basin_id, 'PBIAS_high': np.nan, 'FHV': np.nan, 'PBIAS_low': np.nan, 'FLV': np.nan}
+                    extreme_metrics.append(metrics)
+                    continue
+
+                # High flow metrics
+                pbia_high, fhv = self.__calculate_event_metrics(obs, sim, high_flow_quantile, 'high')
+
+                # Low flow metrics
+                pbia_low, flv = self.__calculate_event_metrics(obs, sim, low_flow_quantile, 'low')
+
+                metrics = {
+                    'basin_id': basin_id,
+                    'PBIAS_high': pbia_high,
+                    'FHV': fhv,
+                    'PBIAS_low': pbia_low,
+                    'FLV': flv
+                }
+                extreme_metrics.append(metrics)
+
+            except Exception as e:
+                print(f"Error evaluating extremes for basin {basin_id}: {e}")
+                metrics = {'basin_id': basin_id, 'PBIAS_high': np.nan, 'FHV': np.nan, 'PBIAS_low': np.nan, 'FLV': np.nan}
+                extreme_metrics.append(metrics)
+
+        return pd.DataFrame(extreme_metrics)
+    
+    def _calculate_error_by_quantile(self, observed: np.ndarray, simulated: np.ndarray, num_quantiles: int = 10):
+        """
+        Private helper to calculate bias for different flow quantiles.
+        """
+        # Create a DataFrame for easier processing
+        df = pd.DataFrame({'observed': observed, 'simulated': simulated})
+        
+        # Define quantile bins based on the observed flow
+        df['quantile_bin'] = pd.qcut(df['observed'], q=num_quantiles, labels=False, duplicates='drop')
+        
+        # Calculate bias (simulated - observed) for each row
+        df['bias'] = df['simulated'] - df['observed']
+        
+        # Group by quantile bin and calculate the mean bias
+        quantile_bias = df.groupby('quantile_bin')['bias'].mean()
+        
+        # Create labels for the plot
+        labels = []
+        quantiles = np.linspace(0, 1, num_quantiles + 1)
+        for i in range(num_quantiles):
+            labels.append(f'{quantiles[i]*100:.0f}-{quantiles[i+1]*100:.0f}%')
+        
+        # Ensure the labels match the calculated biases
+        quantile_bias.index = labels[:len(quantile_bias)]
+        
+        return quantile_bias
+
+    def plot_case_study(self, basin_id: str, storm_date_str: str, window_days: int = 10):
+        """
+        Generates a comprehensive multi-panel plot for a single basin case study.
+
+        Args:
+            basin_id (str): The ID of the basin to plot.
+            storm_date_str (str): The center date for the storm window, e.g., '2015-06-20'.
+            window_days (int): The number of days to show in the storm window plot.
+        """
+        try:
+            nse, kge, sim, obs, dates = self.__evaluate_single__(basin_id)
+            if obs is None:
+                print(f"No data available for basin {basin_id}")
+                return
+        except Exception as e:
+            print(f"Could not process basin {basin_id}: {e}")
+            return
+
+        # Create a 3-panel figure
+        fig, axes = plt.subplots(3, 1, figsize=(12, 18), gridspec_kw={'height_ratios': [1, 1, 1]})
+        fig.suptitle(f'Case Study: Basin {basin_id} (NSE: {nse:.3f}, KGE: {kge:.3f})', fontsize=16)
+
+        # --- Panel 1: Full Hydrograph ---
+        axes[0].plot(dates, obs, label='Observed', color='k', lw=1.5)
+        axes[0].plot(dates, sim, label='Simulated', color='r', alpha=0.8, lw=1.5)
+        axes[0].set_title('Full Period Hydrograph')
+        axes[0].set_ylabel(f'{self.target_var.capitalize()} ($m^3/s$)')
+        axes[0].legend()
+        axes[0].grid(True, which='both', linestyle='--', linewidth=0.5)
+
+        # --- Panel 2: Storm Response Window ---
+        storm_center = pd.to_datetime(storm_date_str)
+        start_date = storm_center - pd.Timedelta(days=window_days/2)
+        end_date = storm_center + pd.Timedelta(days=window_days/2)
+
+        df_full = pd.DataFrame({'date': dates, 'obs': obs, 'sim': sim}).set_index('date')
+        df_storm = df_full.loc[start_date:end_date]
+
+        axes[1].plot(df_storm.index, df_storm['obs'], 'o-', label='Observed', color='k', lw=2)
+        axes[1].plot(df_storm.index, df_storm['sim'], 'o--', label='Simulated', color='r', alpha=0.8, lw=2)
+        axes[1].set_title(f'Storm Response Window ({storm_date_str})')
+        axes[1].set_ylabel(f'{self.target_var.capitalize()} ($m^3/s$)')
+        axes[1].legend()
+        axes[1].grid(True, which='both', linestyle='--', linewidth=0.5)
+        fig.autofmt_xdate() # Improve date formatting
+
+        # --- Panel 3: Errors by Flow Quantile ---
+        quantile_bias = self._calculate_error_by_quantile(obs, sim)
+        quantile_bias.plot(kind='bar', ax=axes[2], color='steelblue', edgecolor='k')
+        axes[2].axhline(0, color='k', linestyle='--', linewidth=1)
+        axes[2].set_title('Mean Error (Bias) by Flow Quantile')
+        axes[2].set_xlabel('Observed Flow Quantile Bins')
+        axes[2].set_ylabel('Bias ($Simulated - Observed$)')
+        axes[2].grid(axis='y', linestyle='--', linewidth=0.5)
+        plt.setp(axes[2].get_xticklabels(), rotation=45, ha="right")
+
+
+        plt.tight_layout(rect=[0, 0.03, 1, 0.96]) # Adjust for suptitle
         plt.show()

@@ -1,15 +1,15 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: EALSTM_No_Static_Regional
+experiment_name: EALSTM_prcp_split
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: ./basin_list/regional_train.txt
-validation_basin_file: ./basin_list/regional_test.txt
-test_basin_file: ./basin_list/regional_test.txt
+train_basin_file: ./basin_list/prcp_train.txt
+validation_basin_file: ./basin_list/prcp_test.txt
+test_basin_file: ./basin_list/prcp_test.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1980'
@@ -31,7 +31,7 @@ device: cuda:0
 validate_every: 1
 
 # specify how many random basins to use for validation
-validate_n_random_basins: 50
+validate_n_random_basins: 200
 
 # specify which metrics to calculate during validation (see codebase.evaluation.metrics)
 metrics:
