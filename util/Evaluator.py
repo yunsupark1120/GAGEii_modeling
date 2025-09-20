@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 from tqdm import tqdm
 from scipy import stats
+import seaborn as sns
 
 
 class Evaluator():
@@ -474,6 +475,131 @@ class Evaluator():
         plt.show()
 
     # ------------------- NEW METHODS START HERE -------------------
+    
+# In your Evaluator class in Evaluator.py...
+
+    def plot_water_balance_correlation(self, forcing_dir: str):
+        """
+        Correlates (P - T_mean proxy for ET) vs simulated Q across all basins.
+        Both P and T_mean are z-score normalized before subtraction.
+        """
+        basin_ids = self.__result_df['basin_id'].tolist()
+        correlations = []
+        
+        precip_col = 'prcp' 
+        tmax_col = 'tmax'
+        tmin_col = 'tmin'
+
+        print("Running refined water balance check (P - T_proxy vs. Q)...")
+        for basin_id in tqdm(basin_ids):
+            try:
+                forcing_file = Path(forcing_dir) / f"{basin_id}.csv"
+                if not forcing_file.exists():
+                    continue
+                
+                df_force = pd.read_csv(forcing_file, index_col='date', parse_dates=True)
+                df_force = df_force.loc[self.test_start_date:self.test_end_date]
+
+                # --- FIX 2: Calculate tmean from tmax and tmin ---
+                df_force['tmean_calc'] = (df_force[tmax_col] + df_force[tmin_col]) / 2
+
+                # --- FIX 3: Add checks for stability before normalizing ---
+                if df_force[precip_col].std() == 0 or df_force['tmean_calc'].std() == 0:
+                    continue # Skip basins with no variation in forcing data
+
+                prcp_norm = (df_force[precip_col] - df_force[precip_col].mean()) / df_force[precip_col].std()
+                tmean_norm = (df_force['tmean_calc'] - df_force['tmean_calc'].mean()) / df_force['tmean_calc'].std()
+                water_available_proxy = prcp_norm - tmean_norm
+
+                _, _, sim, _, dates = self.__evaluate_single__(basin_id)
+                sim_q = pd.Series(sim, index=pd.to_datetime(dates))
+
+                merged = pd.concat([water_available_proxy, sim_q], axis=1).dropna()
+                if merged.shape[0] > 10: 
+                    corr = merged.corr().iloc[0, 1]
+                    correlations.append((basin_id, corr))
+                    
+            except Exception as e:
+                # --- FIX 4: Temporarily enable printing the error to debug ---
+                print(f"Skipping basin {basin_id} due to an error: {e}")
+                continue
+
+        if not correlations:
+            print("\n⚠️ WARNING: The 'correlations' list is empty. No plot will be generated.")
+            print("Please check for errors above, especially 'KeyError' which indicates wrong column names.")
+            return None # Return None if no data
+
+        df_corr = pd.DataFrame(correlations, columns=['basin_id', 'corr_P_minus_ET_Q'])
+        self.plot_correlation_histogram(df_corr, 'corr_P_minus_ET_Q', 'P-ET_proxy vs Q')
+        return df_corr
+
+    def plot_snow_lag_correlation(self, forcing_dir: str, max_lag: int = 30, snow_dominance_threshold: float = 0.2):
+        """
+        Correlational analysis: SWE vs lagged Q for SNOW-DOMINATED basins.
+        """
+        basin_ids = self.__result_df['basin_id'].tolist()
+        results = []
+        
+        # --- CHANGE 3: Filter for snow-dominated basins FIRST ---
+        print("Identifying snow-dominated basins...")
+        snow_dominated_basins = []
+        for basin_id in tqdm(basin_ids):
+            try:
+                forcing_file = Path(forcing_dir) / f"{basin_id}.csv"
+                if not forcing_file.exists(): continue
+                df_force = pd.read_csv(forcing_file, index_col='date', parse_dates=True)
+                
+                # Use data from the entire period for a stable index
+                avg_annual_swe = df_force['swe'].resample('Y').sum().mean()
+                avg_annual_prcp = df_force['prcp'].resample('Y').sum().mean()
+
+                if avg_annual_prcp > 0:
+                    dominance_index = avg_annual_swe / avg_annual_prcp
+                    if dominance_index > snow_dominance_threshold:
+                        snow_dominated_basins.append(basin_id)
+            except Exception:
+                continue
+        
+        print(f"Found {len(snow_dominated_basins)} snow-dominated basins (Index > {snow_dominance_threshold}).")
+
+        print("Running SWE-Q lag correlation on snow-dominated basins...")
+        for basin_id in tqdm(snow_dominated_basins): # Iterate over the filtered list
+            try:
+                forcing_file = Path(forcing_dir) / f"{basin_id}.csv"
+                df_force = pd.read_csv(forcing_file, index_col='date', parse_dates=True)
+                swe = df_force['swe'].loc[self.test_start_date:self.test_end_date]
+
+                _, _, sim, _, dates = self.__evaluate_single__(basin_id)
+                sim_q = pd.Series(sim, index=pd.to_datetime(dates))
+
+                best_corr, best_lag = -999, 0
+                for lag in range(0, max_lag + 1):
+                    shifted_q = sim_q.shift(lag)
+                    merged = pd.concat([swe, shifted_q], axis=1).dropna()
+                    if merged.shape[0] > 10:
+                        corr = merged.corr().iloc[0, 1]
+                        if corr > best_corr:
+                            best_corr, best_lag = corr, lag
+                
+                if best_corr > -999:
+                    results.append((basin_id, best_corr, best_lag))
+            except Exception as e:
+                # print(f"Error in SWE lag for basin {basin_id}: {e}")
+                continue
+
+        df_swe = pd.DataFrame(results, columns=['basin_id', 'best_corr', 'best_lag'])
+        
+        # Generate the same plots, now on the filtered data
+        # (Your existing scatter plot and heatmap functions will work fine with this new df_swe)
+        sns.scatterplot(data=df_swe, x="best_lag", y="best_corr", hue="best_corr",
+                        palette="viridis", edgecolor="k", legend=False)
+        plt.title("Best SWE–Q Lag Correlation (Snow-Dominated Basins)")
+        plt.xlabel("Optimal Lag (days)")
+        plt.ylabel("Correlation Coefficient (r)")
+        plt.show()
+
+        return df_swe
+
 
     def __calculate_event_metrics(self, observed: np.ndarray, simulated: np.ndarray, quantile: float, event_type: str):
         """
@@ -659,4 +785,93 @@ class Evaluator():
 
 
         plt.tight_layout(rect=[0, 0.03, 1, 0.96]) # Adjust for suptitle
+        plt.show()
+
+# In your Evaluator class in Evaluator.py...
+
+    def plot_correlation_histogram(self, df_corr, 
+                                column_name='corr_P_Q', # <-- CHANGE 1: Add argument for column name
+                                title_component='Precipitation vs Simulated Discharge' # <-- CHANGE 2: Add argument for title
+                                ):
+        """
+        Plot histogram of basin-wise correlations.
+        Args:
+            df_corr (pd.DataFrame): DataFrame containing basin_id and correlation values.
+            column_name (str): The name of the correlation column to plot.
+            title_component (str): A string to use in the plot title.
+        """
+        # --- CHANGE 3: Use the new arguments to make the plot dynamic ---
+        if column_name not in df_corr.columns:
+            print(f"Error: Column '{column_name}' not found in the DataFrame.")
+            return
+
+        plt.figure(figsize=(12, 7)) # Slightly larger figure for clarity
+        sns.histplot(df_corr[column_name], bins=20, kde=True, color="steelblue", edgecolor="black")
+        
+        plt.title(f"Correlation between {title_component} across Basins", fontsize=16)
+        plt.xlabel("Correlation coefficient (r)", fontsize=16)
+        plt.ylabel("Number of basins", fontsize=16)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.grid(axis="y", linestyle="--", alpha=0.7)
+        plt.tight_layout()
+        plt.show()
+
+
+    def plot_correlation_heatmap(self, df_corr, df_swe):
+        """
+        Heatmap comparing correlation types across basins.
+        """
+        # --- FIX: Merge using the actual column name from df_corr ---
+        if df_corr is None or df_swe is None:
+            print("Cannot generate heatmap, one of the input dataframes is missing.")
+            return
+
+        merged = df_corr.merge(df_swe, on="basin_id", how="inner")
+
+        # Check if merge resulted in an empty dataframe
+        if merged.empty:
+            print("Warning: Merged dataframe for heatmap is empty. No basins in common?")
+            return
+
+        # Dynamically get the precip correlation column name (it's the second column)
+        precip_corr_col = df_corr.columns[1] 
+
+        heatmap_df = merged[['basin_id', precip_corr_col, 'best_corr']].set_index('basin_id')
+        heatmap_df.columns = ['P-ET_proxy vs Q', 'SWE vs Q (best lag)'] # Update labels
+
+        plt.figure(figsize=(10, 12))
+        sns.heatmap(heatmap_df, cmap="coolwarm", center=0, vmin=-1, vmax=1,
+                    cbar_kws={'label': 'Correlation coefficient (r)'})
+        plt.title("Correlation Heatmap across Basins", fontsize=16)
+        plt.xlabel("Correlation Type", fontsize=14)
+        plt.ylabel("Basin ID", fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks([], fontsize=10)
+        plt.tight_layout()
+        plt.show()
+
+    def plot_swe_lag_heatmap(self, df_swe, max_lag: int = 30, bins: int = 20):
+        """
+        2D heatmap: distribution of SWE–Q correlations vs lag.
+        Aggregates across all basins.
+        Args:
+            df_swe (pd.DataFrame): [basin_id, best_corr, best_lag]
+            max_lag (int): maximum lag considered
+            bins (int): bins for heatmap
+        """
+        plt.figure(figsize=(10, 6))
+        heatmap_data, xedges, yedges = np.histogram2d(
+            df_swe['best_lag'], df_swe['best_corr'],
+            bins=[np.arange(0, max_lag+2, 2), np.linspace(-1, 1, bins)]
+        )
+        sns.heatmap(heatmap_data.T, cmap="viridis", cbar=True,
+                    xticklabels=np.arange(0, max_lag+2, 2),
+                    yticklabels=np.round(np.linspace(-1, 1, bins), 2))
+        plt.title("SWE–Q Lag Correlation Heatmap (All Basins)", fontsize=16)
+        plt.xlabel("Lag (days)", fontsize=14)
+        plt.ylabel("Correlation coefficient (r)", fontsize=14)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.tight_layout()
         plt.show()

@@ -1,15 +1,15 @@
  # --- Experiment configurations --------------------------------------------------------------------
 
 # experiment name, used as folder name
-experiment_name: EALSTM_prcp_split
+experiment_name: EALSTM_temp_split
 
 # place to store run directory (if empty runs are stored in $cwd$/runs/)
 run_dir:
 
 # files to specify training, validation and test basins (relative to code root or absolute path)
-train_basin_file: ./basin_list/prcp_train.txt
-validation_basin_file: ./basin_list/prcp_test.txt
-test_basin_file: ./basin_list/prcp_test.txt
+train_basin_file: ./basin_list/temp_train.txt
+validation_basin_file: ./basin_list/temp_test.txt
+test_basin_file: ./basin_list/temp_test.txt
 
 # training, validation and test time periods (format = 'dd/mm/yyyy')
 train_start_date: '01/01/1980'
@@ -76,7 +76,7 @@ learning_rate:
     0: 0.0001
 
 # Mini-batch size
-batch_size: 1024
+batch_size: 128
 
 # Number of training epochs
 epochs: 100
